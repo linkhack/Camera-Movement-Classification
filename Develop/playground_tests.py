@@ -1,4 +1,4 @@
-from camclassifier import CNNLSTM
+from camclassifier.cnnlstm_model import CNNLSTM
 import cv2
 import numpy as np
 import tensorflow as tf
