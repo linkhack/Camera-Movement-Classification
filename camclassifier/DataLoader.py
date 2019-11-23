@@ -2,10 +2,15 @@ import tensorflow as tf
 import pandas as pd
 import typing
 import csv
+import os
+from pathlib import Path
 import random
 from typing import Tuple, List
 import numpy as np
 import cv2
+import keras
+import keras.backend as K
+
 
 class DataLoader:
     def __init__(self, dataset_path: str, frame_size: Tuple[int, int], frame_number: int = 16, stride:int = 1):
@@ -27,29 +32,31 @@ class DataLoader:
     def pipeline(self, batch_size: int):
         return self.dataset.shuffle(len(self.inputs)).map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(1)
 
-    def process_file(self, input: Tuple[str, str, str, str]):
+    def process_file(self, input: Tuple[str, int, int, int]):
 
         vid_shape = [self.frame_number,self.frame_size[0], self.frame_size[1],3]
         shot = tf.py_function(self._process_file_py, [input],tf.float32)
         shot.set_shape(vid_shape)
 
-        return (shot, input[1])
+        return shot, tf.one_hot(int(input[1]),3)
 
     def _process_file_py(self, input):
 
         file_name = input[0]
-
-        cap = cv2.VideoCapture(str(file_name))
+        cap = cv2.VideoCapture(file_name.numpy().decode('UTF-8'))
         frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
         frameStart = int(input[2])
         frameEnd = int(input[3])
-        buf = np.empty((self.frame_number, frameHeight, frameWidth, 3), np.dtype('uint8'))/255.
-        start_frame = int(random.uniform(frameStart, int(frameEnd-int(self.stride*int(self.frame_number-1)))))
+        start_shot = frameStart/fps
+        end_shot = frameEnd/fps
+        duration = (self.stride*(self.frame_number-1))/fps
+        start_time = random.uniform(start_shot,end_shot-duration)
+        buf = np.empty((self.frame_number, self.frame_size[0], self.frame_size[1], 3), np.dtype('uint8'))/255.
 
-        # TODO: use msec if less errors
-        cap.set(cv2.CAP_PROP_POS_FRAMES,start_frame)
+        cap.set(cv2.CAP_PROP_POS_MSEC,start_time)
         fc = 0
         output_fc=0
         ret = True
@@ -65,4 +72,4 @@ class DataLoader:
 
         cap.release()
 
-        return (buf, input[1])
+        return buf

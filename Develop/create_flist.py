@@ -1,5 +1,6 @@
 import argparse
 import csv
+from pathlib import Path
 import os
 
 
@@ -8,12 +9,19 @@ parser.add_argument('--folder_path', default='./training_data', type=str,
                     help='The folder path to videos.')
 parser.add_argument('--annotation', default='./annotations.csv', type=str,
                     help='The annotation file.')
-parser.add_argument('--output_folder', default='./training_data/shots', type=str,
-                    help='The output folder.')
+
+parser.add_argument('--output', default='./annotation.flist', type=str,
+                    help = 'Output file')
 parser.add_argument('--create-list', default='1', type = int,
                     help="Create file list and annotation")
 parser.add_argument('--is_shuffled', default='1', type=int,
                     help='Needed to be shuffled.')
+
+categories = {
+    'pan':0,
+    'tilt':1,
+    'tracking':2
+}
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -50,10 +58,10 @@ if __name__ == "__main__":
                 shot_id = row[shot_id_index]
                 start_frame = int(row[start_frame_index])
                 end_frame = int(row[end_frame_index])
-                classification = row[classification_index]
+                classification = categories.get(row[classification_index])
                 movie_name = row[name_index]
 
-                file_path = args.folder_path + "/" + movie_name + ".mp4"
+                file_path =  Path(args.folder_path + "/" + movie_name + ".mp4").absolute().as_posix()
                 #Parse fileinfo
                 if os.path.isfile(file_path):
                     annotation_list.append([file_path, classification, start_frame, end_frame])
@@ -61,7 +69,7 @@ if __name__ == "__main__":
             line_count+=1
 
         #write flist only if could open original flist
-        new_annotation_path = args.output_folder + "/annotation.flist"
+        new_annotation_path = args.output
 
         annotation_str = "\n".join(map(lambda record: " ".join(map(str,record)), annotation_list))
 

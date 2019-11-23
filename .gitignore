@@ -107,4 +107,4 @@ venv.bak/
 .idea
 
 Data/
-.flist
+*.flist
