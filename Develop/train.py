@@ -6,6 +6,7 @@ from tensorflow import keras
 tf.keras.backend.clear_session()
 
 model = build_model()
+model.summary()
 training_set = DataLoader.DataLoader('annotation.flist', (299,299)).pipeline(1)
 validation_set = DataLoader.DataLoader('val.flist', (299,299)).pipeline(1)
 
