@@ -10,7 +10,7 @@ def build_model():
         input_shape=(16, 299, 299, 3)
     )(inputs)
     x = keras.layers.TimeDistributed( keras.layers.Flatten())(feature_extractor)
-   # x = keras.layers.LSTM(255)(x)
+    x = keras.layers.LSTM(128)(x)
     output = keras.layers.Dense(3, activation='softmax')(x)
     model = keras.Model(inputs=inputs, outputs=output)
     return model
