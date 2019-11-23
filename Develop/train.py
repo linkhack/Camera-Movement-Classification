@@ -1,14 +1,17 @@
 from camclassifier import DataLoader
-from camclassifier.cnnlstm_model import CNNLSTM
+from camclassifier.cnnlstm_model import build_model
 import tensorflow as tf
-import keras
+from tensorflow import keras
 
-model = CNNLSTM()
-training_set = DataLoader.DataLoader('annotation.flist', (299,299)).pipeline(16)
-validation_set = DataLoader.DataLoader('val.flist', (299,299)).pipeline(16)
+tf.keras.backend.clear_session()
 
-model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.CategoricalCrossentropy(), metrics=keras.metrics.CategoricalAccuracy())
+model = build_model()
+training_set = DataLoader.DataLoader('annotation.flist', (299,299)).pipeline(1)
+validation_set = DataLoader.DataLoader('val.flist', (299,299)).pipeline(1)
 
-history = model.fit(x=training_set, epochs=3)
+print(validation_set)
+model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.CategoricalCrossentropy(), metrics=[keras.metrics.CategoricalAccuracy()])
+
+history = model.fit(training_set, epochs=3, validation_data=validation_set)
 
 model.evaluate(validation_set)
