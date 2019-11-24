@@ -18,6 +18,7 @@ class DataLoader:
         self.frame_size = frame_size
         self.frame_number = int(frame_number)
         self.stride = int(stride)
+        self.labels = []
         self.dataset = tf.data.Dataset.from_tensor_slices(self.inputs)
 
     def process_flist(self, dataset_path: str) -> List[Tuple[str, str]]:
@@ -27,6 +28,7 @@ class DataLoader:
             content = file.read()
             lines = content.splitlines()
             lines = [tuple(line.split()) for line in lines]
+        self.labels = [line[1] for line in lines]
         return lines
 
     def pipeline(self, batch_size: int):
@@ -50,7 +52,7 @@ class DataLoader:
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         frameStart = int(input[2])
         frameEnd = int(input[3])
-        start_shot = frameStart/fps
+        start_shot = 1000.*frameStart/fps
         end_shot = frameEnd/fps
         duration = (self.stride*(self.frame_number-1))/fps
         start_time = random.uniform(start_shot,end_shot-duration)

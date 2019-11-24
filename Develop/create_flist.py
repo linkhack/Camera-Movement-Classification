@@ -58,7 +58,8 @@ if __name__ == "__main__":
                 shot_id = row[shot_id_index]
                 start_frame = int(row[start_frame_index])
                 end_frame = int(row[end_frame_index])
-                classification = categories.get(row[classification_index])
+                classification = categories.get(row[classification_index].strip())
+                print(row[classification_index])
                 movie_name = row[name_index]
 
                 file_path =  Path(args.folder_path + "/" + movie_name + ".mp4").absolute().as_posix()

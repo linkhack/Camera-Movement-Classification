@@ -108,3 +108,6 @@ venv.bak/
 
 Data/
 *.flist
+model_logs/
+model_checkpoints/
+*.h5
