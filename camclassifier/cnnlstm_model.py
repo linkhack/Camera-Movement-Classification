@@ -1,5 +1,6 @@
 
 import tensorflow.keras as keras
+import tensorflow as tf
 
 
 def build_model():
@@ -17,4 +18,26 @@ def build_model():
     output = keras.layers.Dense(3, activation='softmax')(x)
     model = keras.Model(inputs=inputs, outputs=output)
     return model
+
+
+def build_inference_model(window_model):
+    input = keras.Input((None,224,224,3))
+    frames = keras.Lambda(sliding_window)(input, 2, 3)
+    values = keras.layers.TimeDistributed(window_model)(frames)
+    output = keras.layers.GlobalAveragePooling1D()(values)
+    model = keras.Model(inputs=input, outputs=output)
+    return model
+
+
+def sliding_window(shots, stride_model=2, stride_windows=3):
+    shot_length = tf.shape(shots)[1]
+    window_with = 16
+    valid_length = shot_length-(stride_model*(window_with-1))+1
+
+    start_indices = tf.range(valid_length, delta = stride_windows)
+    windows = tf.map_fn(lambda t: shots[:,t:(t+window_with-1)], start_indices)
+    windows = tf.transpose(windows, [1,0,2,3,4,5])
+
+    return windows
+
 

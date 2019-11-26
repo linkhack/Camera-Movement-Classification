@@ -23,6 +23,9 @@ model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.CategoricalCr
 log_dir = os.path.join('model_logs', camclassifier.utils.date_uid())
 model_dir = os.path.join('model_checkpoints', camclassifier.utils.date_uid())
 
+if not os.path.exists(model_dir):
+    os.mkdir(model_dir)
+
 callbacks = [
     keras.callbacks.ModelCheckpoint(
         filepath=os.path.join(model_dir,'mymodel_{epoch}.h5'),
