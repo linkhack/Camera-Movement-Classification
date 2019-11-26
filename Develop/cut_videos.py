@@ -1,8 +1,8 @@
 import argparse
 import csv
 import os
-from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
-from moviepy.video.io.ffmpeg_reader import ffmpeg_parse_infos
+import cv2
+import numpy as np
 
 
 parser = argparse.ArgumentParser()
@@ -61,23 +61,34 @@ if __name__ == "__main__":
                 #Cut and save file
                 #Parse fileinfo
                 if os.path.isfile(orig_file_path):
-                    info = ffmpeg_parse_infos(orig_file_path)
-                    fps = info["video_fps"]
-                    start_time = start_frame/fps
-                    end_time = end_frame/fps
+                    cap = cv2.VideoCapture(orig_file_path)
+                    frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    fps = int(cap.get(cv2.CAP_PROP_FPS))
 
-                    ffmpeg_extract_subclip(orig_file_path,start_time,end_time,new_file_path)
+                    start_shot = 1000. * start_frame / fps
+                    end_shot = 1000.* end_frame / fps
+                    frame_number = end_frame-start_frame
+                    buf = np.empty((frame_number,frameHeight, frameWidth, 3),
+                                   np.dtype('uint8'))
+
+                    cap.set(cv2.CAP_PROP_POS_MSEC, start_shot)
+                    fc = 0
+                    output_fc = 0
+                    ret = True
+                    stride_counter = 0
+                    while (output_fc < frame_number and ret):
+                        ret, buf[output_fc] = cap.read()
+                        output_fc+=1
+
+                    cap.release()
+
+                    out = cv2.VideoWriter(new_file_name,cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frameWidth,frameHeight))
+
+                    for i in range(np.size(buf, 0)):
+                        out.write(buf[i])
+                    out.release()
 
                     #Prepare own annotation format
-                    annotation_list.append([new_file_name, classification])
 
             line_count+=1
-
-        #write annotation only if could open original annotation
-        new_annotation_path = args.output_folder + "/annotation.csv"
-        with open(new_annotation_path, "w+", newline='') as csvfile:
-            fieldnames = ['shot', 'classification']
-            csvWriter = csv.writer(csvfile, delimiter=";")
-            csvWriter.writerow(fieldnames)
-            csvWriter.writerows(annotation_list)
-

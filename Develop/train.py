@@ -1,23 +1,26 @@
 from camclassifier import DataLoader
 from camclassifier.cnnlstm_model import build_model
+import camclassifier.utils
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 tf.keras.backend.clear_session()
-import os
+import os,datetime
 
 model = build_model()
 model.summary()
-training_set = DataLoader.DataLoader('annotation.flist', (224,224)).pipeline(2)
-validation_set = DataLoader.DataLoader('val.flist', (224,224)).pipeline(1)
-test_set = DataLoader.DataLoader('test.flist',(224,224)).pipeline(1)
+training_set = DataLoader.DataLoader('annotation.flist', (224,224))
+trainings_pipeline = training_set.validation_pipeline(1)
+class_weight = training_set.get_class_weights()
+validation_set = DataLoader.DataLoader('val.flist', (224,224)).validation_pipeline(1)
+test_set = DataLoader.DataLoader('test.flist',(224,224)).validation_pipeline(1)
 
 print(validation_set)
 
 
 model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.CategoricalCrossentropy(), metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Recall(), keras.metrics.Precision()])
 
-log_dir = os.path.join('model_logs','batch2','efilms_only')
+log_dir = os.path.join('model_logs', camclassifier.utils.date_uid())
 model_dir = os.path.join('model_checkpoints')
 
 callbacks = [
@@ -41,7 +44,7 @@ callbacks = [
         verbose=1)
 ]
 
-history = model.fit(training_set, epochs=25, validation_data=validation_set, callbacks=callbacks ,validation_steps=423, verbose=2)
+history = model.fit(trainings_pipeline, epochs=25, validation_data=validation_set, callbacks=callbacks ,validation_steps=554, verbose=2, class_weight=class_weight)
 
 cm = np.zeros((3,3))
 for x,y in test_set:

@@ -8,9 +8,12 @@ def build_model():
     feature_extractor = keras.layers.TimeDistributed(
         keras.Model(inputs=base_model.input, outputs=base_model.output),
         input_shape=(16, 224, 224, 3)
-    )(inputs)
-    x = keras.layers.TimeDistributed( keras.layers.Flatten())(feature_extractor)
-    x = keras.layers.LSTM(128)(x)
+    )
+    feature_extractor.trainable = False
+    x = feature_extractor(inputs)
+    x = keras.layers.TimeDistributed( keras.layers.Flatten())(x)
+    x = keras.layers.LSTM(512)(x)
+    x=  keras.layers.Dense(128, activation='relu')(x)
     output = keras.layers.Dense(3, activation='softmax')(x)
     model = keras.Model(inputs=inputs, outputs=output)
     return model
