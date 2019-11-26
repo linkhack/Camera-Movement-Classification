@@ -44,6 +44,7 @@ callbacks = [
         min_delta=1e-2,
         # "no longer improving" being further defined as "for at least 2 epochs"
         patience=3,
+        restore_best_weights=True,
         verbose=1)
 ]
 
