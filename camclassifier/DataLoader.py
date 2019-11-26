@@ -46,7 +46,7 @@ class DataLoader:
         return dataset.map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
     def validation_pipeline(self, batch_size: int):
-        return self.dataset.map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
     def process_file(self, input: Tuple[str, int, int, int]):
 

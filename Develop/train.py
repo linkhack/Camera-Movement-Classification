@@ -12,16 +12,16 @@ model.summary()
 training_set = DataLoader.DataLoader('annotation.flist', (224,224))
 trainings_pipeline = training_set.validation_pipeline(1)
 class_weight = training_set.get_class_weights()
+print(f"Class weights: {class_weight}")
 validation_set = DataLoader.DataLoader('val.flist', (224,224)).validation_pipeline(1)
 test_set = DataLoader.DataLoader('test.flist',(224,224)).validation_pipeline(1)
 
-print(validation_set)
 
 
 model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.CategoricalCrossentropy(), metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Recall(), keras.metrics.Precision()])
 
 log_dir = os.path.join('model_logs', camclassifier.utils.date_uid())
-model_dir = os.path.join('model_checkpoints')
+model_dir = os.path.join('model_checkpoints', camclassifier.utils.date_uid())
 
 callbacks = [
     keras.callbacks.ModelCheckpoint(
