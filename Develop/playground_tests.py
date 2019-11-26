@@ -17,4 +17,4 @@ print(dataset)
 
 dataset2 = DataLoader.DataLoader('annotation.flist', (299,299)).pipeline(16)
 for x,y in dataset2:
-    print(x)
+    print(y)

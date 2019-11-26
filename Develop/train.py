@@ -18,7 +18,7 @@ test_set = DataLoader.DataLoader('test.flist',(224,224)).validation_pipeline(1)
 
 
 
-model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.CategoricalCrossentropy(), metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Recall(), keras.metrics.Precision()])
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001), loss=keras.losses.CategoricalCrossentropy(), metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Recall(), keras.metrics.Precision()])
 
 log_dir = os.path.join('model_logs', camclassifier.utils.date_uid())
 model_dir = os.path.join('model_checkpoints', camclassifier.utils.date_uid())
