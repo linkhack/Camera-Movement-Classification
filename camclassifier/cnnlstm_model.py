@@ -10,7 +10,7 @@ def build_model():
         keras.Model(inputs=base_model.input, outputs=base_model.output),
         input_shape=(16, 224, 224, 3)
     )
-    feature_extractor.trainable = False
+    # feature_extractor.trainable = False
     x = feature_extractor(inputs)
     x = keras.layers.TimeDistributed( keras.layers.Flatten())(x)
     x = keras.layers.LSTM(512)(x)
@@ -22,7 +22,7 @@ def build_model():
 
 def build_inference_model(window_model):
     input = keras.Input((None,224,224,3))
-    frames = keras.Lambda(sliding_window)(input, 2, 3)
+    frames = keras.layers.Lambda(sliding_window)(input, 2, 3)
     values = keras.layers.TimeDistributed(window_model)(frames)
     output = keras.layers.GlobalAveragePooling1D()(values)
     model = keras.Model(inputs=input, outputs=output)
@@ -34,7 +34,7 @@ def sliding_window(shots, stride_model=2, stride_windows=3):
     window_with = 16
     valid_length = shot_length-(stride_model*(window_with-1))+1
 
-    start_indices = tf.range(valid_length, delta = stride_windows)
+    start_indices = tf.range(valid_length, delta = stride_windows, dtype=tf.int32)
     windows = tf.map_fn(lambda t: shots[:,t:(t+window_with-1)], start_indices)
     windows = tf.transpose(windows, [1,0,2,3,4,5])
 

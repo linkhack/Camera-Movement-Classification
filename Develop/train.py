@@ -9,16 +9,16 @@ import os,datetime
 
 model = build_model()
 model.summary()
-training_set = DataLoader.DataLoader('annotation.flist', (224,224))
+training_set = DataLoader.DataLoader('annotation.flist', (224,224), stride=3)
 trainings_pipeline = training_set.validation_pipeline(1)
 class_weight = training_set.get_class_weights()
 print(f"Class weights: {class_weight}")
-validation_set = DataLoader.DataLoader('val.flist', (224,224)).validation_pipeline(1)
-test_set = DataLoader.DataLoader('test.flist',(224,224)).validation_pipeline(1)
+validation_set = DataLoader.DataLoader('val.flist', (224,224), stride=3).validation_pipeline(1)
+test_set = DataLoader.DataLoader('test.flist',(224,224), stride=3).validation_pipeline(1)
 
 
 
-model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001), loss=keras.losses.CategoricalCrossentropy(), metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Recall(), keras.metrics.Precision()])
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001, epsilon=0.1), loss=keras.losses.CategoricalCrossentropy(), metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Recall(), keras.metrics.Precision()])
 
 log_dir = os.path.join('model_logs', camclassifier.utils.date_uid())
 model_dir = os.path.join('model_checkpoints', camclassifier.utils.date_uid())
@@ -41,9 +41,9 @@ callbacks = [
         # Stop training when `val_loss` is no longer improving
         monitor='val_loss',
         # "no longer improving" being defined as "no better than 1e-2 less"
-        min_delta=1e-2,
+        min_delta=1e-3,
         # "no longer improving" being further defined as "for at least 2 epochs"
-        patience=3,
+        patience=5,
         restore_best_weights=True,
         verbose=1)
 ]
@@ -58,3 +58,4 @@ for x,y in test_set:
     cm[y_predict,y_true]+=1
 
 print(cm)
+acc = np.trace(cm)/np.sum(cm)
