@@ -3,6 +3,7 @@ import csv
 import os
 import cv2
 import numpy as np
+from skimage import exposure, util
 
 
 parser = argparse.ArgumentParser()
@@ -83,10 +84,10 @@ if __name__ == "__main__":
 
                     cap.release()
 
-                    out = cv2.VideoWriter(new_file_name,cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frameWidth,frameHeight))
+                    out = cv2.VideoWriter(new_file_name,cv2.VideoWriter_fourcc('m','p','4','v'), 20, (frameWidth,frameHeight))
 
                     for i in range(np.size(buf, 0)):
-                        out.write(buf[i])
+                        out.write(util.img_as_ubyte(exposure.equalize_hist(buf[i])))
                     out.release()
 
                     #Prepare own annotation format

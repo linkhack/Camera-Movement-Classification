@@ -48,7 +48,7 @@ callbacks = [
         verbose=1)
 ]
 
-history = model.fit(trainings_pipeline, epochs=25, validation_data=validation_set, callbacks=callbacks ,validation_steps=554, verbose=2, class_weight=class_weight)
+history = model.fit(trainings_pipeline, epochs=25, validation_data=validation_set, callbacks=callbacks, steps_per_epoch=500 ,validation_steps=554, verbose=2, class_weight=class_weight)
 
 cm = np.zeros((3,3))
 for x,y in test_set:

@@ -3,6 +3,7 @@ import pandas as pd
 import typing
 import csv
 import os
+from skimage import exposure, util
 from pathlib import Path
 import random
 from typing import Tuple, List
@@ -46,7 +47,7 @@ class DataLoader:
         return dataset.map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
     def validation_pipeline(self, batch_size: int):
-        return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        return self.dataset.repeat().shuffle(self.length).map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
     def test_pipeline(self, batch_size: int):
         return self.dataset.map(self.load_whole_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
@@ -70,7 +71,7 @@ class DataLoader:
         vid_shape = [None, self.frame_size[0], self.frame_size[1],3]
         shot = tf.py_function(self._load_complete_file_py, [input],tf.float32)
         shot.set_shape(vid_shape)
-
+        shot = keras.applications.vgg19.preprocess_input(shot)
         return shot, tf.one_hot(int(input[1]),3)
 
     def split_classes(self, inputs):
@@ -99,7 +100,7 @@ class DataLoader:
         frameEnd = int(input[3])
         start_shot = 1000.*frameStart/fps
 
-        duration = frameEnd-frameStart
+        duration = min(frameEnd-frameStart,32*self.stride*(self.frame_number-1))
         print(duration)
         padded_duration = max(duration, self.stride*(self.frame_number-1)+1)
         print(padded_duration)
@@ -112,13 +113,13 @@ class DataLoader:
             ret, frame = cap.read()
             if ret:
                 frame = cv2.resize(frame,self.frame_size)
-                buf[output_fc]=frame
+                buf[output_fc]=util.img_as_ubyte(exposure.equalize_hist(frame))
             output_fc+=1
 
         cap.release()
         buf =buf.astype(dtype=np.float32)
         print('Loaded')
-        return buf/122.5-1
+        return buf
 
     def _process_file_py(self, input):
 
@@ -148,7 +149,7 @@ class DataLoader:
             if (stride_counter % self.stride == 0):
                 if ret:
                     frame = cv2.resize(frame, self.frame_size)
-                    buf[output_fc] = frame
+                    buf[output_fc] = util.img_as_ubyte(exposure.equalize_hist(frame))
                 output_fc += 1
             stride_counter += 1
             fc += 1
@@ -160,5 +161,5 @@ class DataLoader:
         if reversed_y:
             buf = np.flip(buf, 1)
 
-        return buf / 122.5 - 1
+        return buf
 

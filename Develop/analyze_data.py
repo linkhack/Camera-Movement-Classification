@@ -18,7 +18,7 @@ if __name__ == '__main__':
         lines = content.splitlines()
         lines = [tuple(line.split()) for line in lines]
     labels = [int(line[1]) for line in lines]
-    durations = [int(line[3])-int(line[1]) for line in lines]
+    durations = [int(line[3])-int(line[2]) for line in lines]
     unique, counts = np.unique(labels, return_counts=True)
     distribution = counts/len(labels)
     durations_per_class = {0:[], 1:[], 2:[]}
@@ -32,24 +32,24 @@ if __name__ == '__main__':
     # Plots:
     # Histogram per class
     plt.hist(durations_per_class[0])
-    plt.legend("Distribution of durations of pans")
+    plt.title("Distribution of durations of pans")
     plt.xlabel("Duration in frames")
     plt.ylabel("Count")
     plt.show()
     plt.hist(durations_per_class[1])
-    plt.legend("Distribution of durations of tilts")
+    plt.title("Distribution of durations of tilts")
     plt.xlabel("Duration in frames")
     plt.ylabel("Count")
     plt.show()
     plt.hist(durations_per_class[2])
-    plt.legend("Distribution of durations of tracking")
+    plt.title("Distribution of durations of tracking")
     plt.xlabel("Duration in frames")
     plt.ylabel("Count")
     plt.show()
 
     # Class distribution
-    plt.bar(counts,tick_label=['Pan','Tilt','Tracking'])
-    plt.legend("Distribution of class labels")
+    plt.bar(range(3),counts,tick_label=['Pan','Tilt','Tracking'])
+    plt.title("Distribution of class labels")
     plt.xlabel("Class label")
     plt.ylabel("Count")
     plt.show()

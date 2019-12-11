@@ -10,12 +10,14 @@ def build_model():
         keras.Model(inputs=base_model.input, outputs=base_model.output),
         input_shape=(16, 224, 224, 3)
     )
-    # feature_extractor.trainable = False
+    feature_extractor.trainable = False
     x = feature_extractor(inputs)
     x = keras.layers.TimeDistributed( keras.layers.Flatten())(x)
     x = keras.layers.LSTM(512)(x)
-    x=  keras.layers.Dense(128, activation='relu')(x)
+    x =  keras.layers.Dense(128, activation='relu')(x)
+    #x = keras.layers.GlobalAveragePooling1D()(x)
     output = keras.layers.Dense(3, activation='softmax')(x)
+
     model = keras.Model(inputs=inputs, outputs=output)
     return model
 
