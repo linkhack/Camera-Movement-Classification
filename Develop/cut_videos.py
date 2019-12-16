@@ -22,6 +22,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     line_count = 0
     folder_path = args.folder_path
+    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
     with open(args.annotation) as annotation_csv:
         dialect = csv.Sniffer().sniff(annotation_csv.read(2048))
         annotation_csv.seek(0)
@@ -58,7 +59,7 @@ if __name__ == "__main__":
 
                 orig_file_path = args.folder_path + "/" + movie_name + ".mp4"
                 new_file_name = movie_id + "_" + shot_id + ".mp4"
-                new_file_path = args.output_folder + "/" + new_file_name
+                new_file_path = args.output_folder + "/" + classification.strip() + "/"+ new_file_name
                 #Cut and save file
                 #Parse fileinfo
                 if os.path.isfile(orig_file_path):
@@ -84,7 +85,7 @@ if __name__ == "__main__":
 
                     cap.release()
 
-                    out = cv2.VideoWriter(new_file_name,cv2.VideoWriter_fourcc('m','p','4','v'), 20, (frameWidth,frameHeight))
+                    out = cv2.VideoWriter(new_file_path, fourcc, 20, (frameWidth,frameHeight))
 
                     for i in range(np.size(buf, 0)):
                         out.write(util.img_as_ubyte(exposure.equalize_hist(buf[i])))

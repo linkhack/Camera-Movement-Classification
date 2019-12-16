@@ -43,14 +43,16 @@ class DataLoader:
         return lines
 
     def training_pipeline(self, batch_size: int):
-        dataset = tf.data.experimental.sample_from_datasets([self.pan, self.tilt, self.tracking],[0.5,0.5,0.5])
-        return dataset.map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        # dataset = tf.data.experimental.sample_from_datasets([self.pan, self.tilt, self.tracking],[0.5,0.5,0.5])
+        # return dataset.map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        return self.dataset.repeat().shuffle(self.length).map(self.process_file, num_parallel_calls=3).batch(
+        batch_size).prefetch(8)
 
     def validation_pipeline(self, batch_size: int):
-        return self.dataset.repeat().shuffle(self.length).map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=3).batch(batch_size).prefetch(8)
 
     def test_pipeline(self, batch_size: int):
-        return self.dataset.map(self.load_whole_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        return self.dataset.map(self.load_whole_file, num_parallel_calls=3).batch(batch_size).prefetch(8)
 
     def py_iterator(self):
         for item in self.inputs:
@@ -64,7 +66,7 @@ class DataLoader:
         vid_shape = [self.frame_number,self.frame_size[0], self.frame_size[1],3]
         shot = tf.py_function(self._process_file_py, [input],tf.float32)
         shot.set_shape(vid_shape)
-
+        shot = keras.applications.vgg19.preprocess_input(shot)
         return shot, tf.one_hot(int(input[1]),3)
 
     def load_whole_file(self, input):

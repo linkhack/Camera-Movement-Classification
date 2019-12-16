@@ -9,12 +9,12 @@ import os,datetime
 
 model = build_model()
 model.summary()
-training_set = DataLoader.DataLoader('annotation.flist', (224,224), stride=3)
-trainings_pipeline = training_set.validation_pipeline(1)
+training_set = DataLoader.DataLoader('imc_train.flist', (224,224), stride=3)
+trainings_pipeline = training_set.training_pipeline(1)
 class_weight = training_set.get_class_weights()
 print(f"Class weights: {class_weight}")
-validation_set = DataLoader.DataLoader('val.flist', (224,224), stride=3).validation_pipeline(1)
-test_set = DataLoader.DataLoader('test.flist',(224,224), stride=3).validation_pipeline(1)
+validation_set = DataLoader.DataLoader('imc_val.flist', (224,224), stride=3).validation_pipeline(1)
+test_set = DataLoader.DataLoader('imc_test.flist',(224,224), stride=3).validation_pipeline(1)
 
 
 
@@ -33,7 +33,7 @@ callbacks = [
         # The two parameters below mean that we will overwrite
         # the current checkpoint if and only if
         # the `val_loss` score has improved.
-        save_best_only=True,
+        save_best_only=False,
         monitor='val_loss',
         verbose=1),
     keras.callbacks.TensorBoard(log_dir=log_dir, update_freq=200, profile_batch=0, histogram_freq=1),
@@ -43,16 +43,16 @@ callbacks = [
         # "no longer improving" being defined as "no better than 1e-2 less"
         min_delta=1e-3,
         # "no longer improving" being further defined as "for at least 2 epochs"
-        patience=5,
+        patience=15,
         restore_best_weights=True,
         verbose=1)
 ]
 
-history = model.fit(trainings_pipeline, epochs=25, validation_data=validation_set, callbacks=callbacks, steps_per_epoch=500 ,validation_steps=554, verbose=2, class_weight=class_weight)
+history = model.fit(trainings_pipeline, epochs=100, validation_data=validation_set, callbacks=callbacks, steps_per_epoch=1000 ,validation_steps=131, verbose=2, class_weight=class_weight)
 
 cm = np.zeros((3,3))
 for x,y in test_set:
-    y_predict = model.predict(x)
+    y_predict = model.predict(x, batch_size=1)
     y_predict = np.argmax(y_predict[0])
     y_true = np.argmax(y[0])
     cm[y_predict,y_true]+=1
