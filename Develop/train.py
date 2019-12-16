@@ -9,12 +9,12 @@ import os,datetime
 
 model = build_model()
 model.summary()
-training_set = DataLoader.DataLoader('imc_train.flist', (224,224), stride=3)
+training_set = DataLoader.DataLoader('annotation.flist', (224,224), stride=3)
 trainings_pipeline = training_set.training_pipeline(1)
 class_weight = training_set.get_class_weights()
 print(f"Class weights: {class_weight}")
-validation_set = DataLoader.DataLoader('imc_val.flist', (224,224), stride=3).validation_pipeline(1)
-test_set = DataLoader.DataLoader('imc_test.flist',(224,224), stride=3).validation_pipeline(1)
+validation_set = DataLoader.DataLoader('val.flist', (224,224), stride=3).validation_pipeline(1)
+test_set = DataLoader.DataLoader('test.flist',(224,224), stride=3).validation_pipeline(1)
 
 
 

@@ -137,7 +137,8 @@ class DataLoader:
         end_shot = 1000. * frameEnd / fps
         duration = 1000. * (self.stride * (self.frame_number - 1)) / fps
         start_time = random.uniform(start_shot, end_shot - duration)
-        buf = np.empty((self.frame_number, self.frame_size[0], self.frame_size[1], 3), np.dtype('uint8'))
+        max_frames = min(int(np.ceil((frameEnd-frameStart)/self.stride)),self.frame_number)
+        buf = np.empty((max_frames, self.frame_size[0], self.frame_size[1], 3), np.dtype('uint8'))
 
         cap.set(cv2.CAP_PROP_POS_MSEC, start_time)
         fc = 0
@@ -146,7 +147,7 @@ class DataLoader:
         stride_counter = 0
         reversed_x = random.choice([True, False])
         reversed_y = random.choice([True, False])
-        while (output_fc < self.frame_number and ret):
+        while (output_fc < max_frames and ret):
             ret, frame = cap.read()
             if (stride_counter % self.stride == 0):
                 if ret:
@@ -157,6 +158,8 @@ class DataLoader:
             fc += 1
 
         cap.release()
+
+        buf = np.pad(buf,((0,self.frame_number-max_frames),(0,0),(0,0),(0,0)),'reflect')
 
         if reversed_x:
             buf = np.flip(buf, 2)
