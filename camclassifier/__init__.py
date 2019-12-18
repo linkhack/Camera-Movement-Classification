@@ -1,3 +1,4 @@
 name = "camclassifier"
 
-import camclassifier
+import camclassifier.cnnlstm_model
+import camclassifier.DataLoader

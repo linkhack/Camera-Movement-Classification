@@ -1,5 +1,6 @@
 import datetime
 
+
 def date_uid():
     """Generate a unique id based on date.
     Returns:
