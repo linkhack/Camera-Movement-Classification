@@ -1,22 +1,28 @@
 
 import tensorflow.keras as keras
+from tensorflow.keras.applications.resnet50 import ResNet50
+from tensorflow.keras.applications.densenet import DenseNet121
+from tensorflow.keras.applications.vgg16 import VGG16
 import tensorflow as tf
 
 
 def build_model():
     inputs = keras.Input((16, 224, 224, 3))
-    base_model = keras.applications.VGG19(include_top=False, weights='imagenet')
+    base_model = VGG16(include_top=False, weights='imagenet')
     feature_extractor = keras.layers.TimeDistributed(
-        keras.Model(inputs=base_model.input, outputs=base_model.output),
+        keras.Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output),
         input_shape=(16, 224, 224, 3)
     )
     feature_extractor.trainable = False
     x = feature_extractor(inputs)
     x = keras.layers.TimeDistributed( keras.layers.Flatten())(x)
-    x = keras.layers.LSTM(512, return_sequences = True)(x)
-    #x =  keras.layers.TimeDistributed(keras.layers.Dense(256, activation='relu'))(x)
+    #x = keras.layers.LSTM(128, return_sequences = True, recurrent_activation='sigmoid')(x)
+    #x = keras.layers.LSTM(64, return_sequences = True, recurrent_activation='sigmoid')(x)
+    x = keras.layers.LSTM(32, return_sequences = True, recurrent_activation='sigmoid')(x)
+    #x = keras.layers.LSTM(32, return_sequences = True)(x)
+    #x =  keras.layers.TimeDistributed(keras.layers.Dense(128, activation='relu'))(x)
     #x = keras.layers.GlobalAveragePooling1D()(x)
-    x = keras.layers.TimeDistributed(keras.layers.Dense(3, activation='softmax'))(x)
+    x = keras.layers.TimeDistributed(keras.layers.Dense(2, activation='softmax'))(x)
     output = keras.layers.GlobalAveragePooling1D()(x)
     model = keras.Model(inputs=inputs, outputs=output)
     return model

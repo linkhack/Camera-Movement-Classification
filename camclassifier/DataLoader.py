@@ -9,7 +9,10 @@ import random
 from typing import Tuple, List
 import numpy as np
 import cv2
-import keras
+import keras.applications.resnet50 as resnet50
+import keras.applications.densenet as densenet
+import keras.applications.vgg16 as vgg16
+import tensorflow.keras.utils as u
 import keras.backend as K
 
 
@@ -30,7 +33,7 @@ class DataLoader:
         self.dataset = tf.data.Dataset.from_tensor_slices(self.inputs)
         self.pan = tf.data.Dataset.from_tensor_slices(self.classes[0])
         self.tilt = tf.data.Dataset.from_tensor_slices(self.classes[1])
-        self.tracking = tf.data.Dataset.from_tensor_slices(self.classes[2])
+        # self.tracking = tf.data.Dataset.from_tensor_slices(self.classes[2])
 
     def process_flist(self, dataset_path: str) -> List[Tuple[str, str]]:
         shots = []
@@ -42,39 +45,43 @@ class DataLoader:
         self.labels = [line[1] for line in lines]
         return lines
 
+    def balanced_pipeline(self, batch_size):
+        dataset = tf.data.experimental.sample_from_datasets([self.pan, self.tilt],[0.5,0.5])
+        return dataset.map(self.process_file, num_parallel_calls=4).repeat().batch(batch_size).prefetch(1)
+
     def training_pipeline(self, batch_size: int):
         # dataset = tf.data.experimental.sample_from_datasets([self.pan, self.tilt, self.tracking],[0.5,0.5,0.5])
         # return dataset.map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
-        return self.dataset.repeat().shuffle(self.length).map(self.process_file, num_parallel_calls=3).batch(
-        batch_size).prefetch(8)
+        return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=3).batch(
+        batch_size).prefetch(1)
 
     def validation_pipeline(self, batch_size: int):
-        return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=3).batch(batch_size).prefetch(8)
+        return self.dataset.map(self.process_file, num_parallel_calls=2).batch(batch_size).prefetch(1)
 
     def test_pipeline(self, batch_size: int):
-        return self.dataset.map(self.load_whole_file, num_parallel_calls=3).batch(batch_size).prefetch(8)
+        return self.dataset.map(self.load_whole_file, num_parallel_calls=3).batch(batch_size).prefetch(1)
 
     def py_iterator(self):
         for item in self.inputs:
             file_name = item[0]
             label = item[1]
             shot = self._load_complete_file_py(item)
-            yield (shot, tf.one_hot(int(label),3))
+            yield (shot, tf.one_hot(int(label),2))
 
     def process_file(self, input: Tuple[str, int, int, int]):
 
         vid_shape = [self.frame_number,self.frame_size[0], self.frame_size[1],3]
         shot = tf.py_function(self._process_file_py, [input],tf.float32)
         shot.set_shape(vid_shape)
-        shot = keras.applications.vgg19.preprocess_input(shot)
-        return shot, tf.one_hot(int(input[1]),3)
+        shot = vgg16.preprocess_input(shot)
+        return shot, tf.one_hot(int(input[1]),2)
 
     def load_whole_file(self, input):
         vid_shape = [None, self.frame_size[0], self.frame_size[1],3]
         shot = tf.py_function(self._load_complete_file_py, [input],tf.float32)
         shot.set_shape(vid_shape)
-        shot = keras.applications.vgg19.preprocess_input(shot)
-        return shot, tf.one_hot(int(input[1]),3)
+        shot =vgg16.preprocess_input(shot)
+        return shot, tf.one_hot(int(input[1]),2)
 
     def split_classes(self, inputs):
         result = [[],[],[]]
@@ -103,9 +110,8 @@ class DataLoader:
         start_shot = 1000.*frameStart/fps
 
         duration = min(frameEnd-frameStart,32*self.stride*(self.frame_number-1))
-        print(duration)
+
         padded_duration = max(duration, self.stride*(self.frame_number-1)+1)
-        print(padded_duration)
         buf = np.empty((padded_duration, self.frame_size[0], self.frame_size[1], 3), np.dtype('uint8'))
 
         cap.set(cv2.CAP_PROP_POS_MSEC,start_shot)
@@ -120,7 +126,6 @@ class DataLoader:
 
         cap.release()
         buf =buf.astype(dtype=np.float32)
-        print('Loaded')
         return buf
 
     def _process_file_py(self, input):
