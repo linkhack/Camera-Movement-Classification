@@ -7,23 +7,40 @@ The data stems from the digitalization of historical videos from around the seco
 ## Package
 ### Installation
 ### CameraClassificationModel
-This is the main model of this package. It classifies a window of n frames. The model achitecture is based on the paper "Long-Term Recurrent Convolutional Networks for Visual Recognition and Description" by Donahue et al. [[link](https://arxiv.org/abs/1411.4389)]. The model is configurable with the config.yml file.
+This is the main model of this package. It classifies a window of n frames. The model achitecture is based on the paper "Long-Term Recurrent Convolutional Networks for Visual Recognition and Description" by Donahue et al. [[link](https://arxiv.org/abs/1411.4389)]. The model is configurable with the config.yml file. If one comments or deletes a line, then this parameter will be set to default values.
 
 The model is configurable through following parameters:
-'''
-    :param input_size: (width, height, channels)
-    :param window_size: Nr of frames in detection window.
-    :param base_model: Feature extractor to use. One of 'VGG16', 'VGG19'. 'ResNet', 'DenseNet'
-    :param feature_layer: Layer name from which to extract features. Look into base model documentation for layer names.
-                          If feature_layer is none, then only the fully connected classification layers get removed.
-    :param trainable_features: If feature extractor is trainable
-    :param temporal: How to model temporal component. One of 'LSTM', 'CONV'
-    :param LSTM_size: Each list entry is a lstm layer with this number of units
-    :param CONV_filter: Each list entry is a conv layer with this number of filters. Length has to be equal to CONV_filter_size
-    :param CONV_filter_size: Each list entry is a conv layer with this filter size. Length has to be equal to CONV_filter
-    :param nr_classes: Number of classes to classify
-'''
+- input_size: (width, height, channels). Default: (224,224,3)
+- window_size: Number of frames in detection window. Default: 16
+- base_model: Feature extractor to use. One of 'VGG16', 'VGG19'. 'ResNet', 'DenseNet'. Default: 'VGG16'
+- feature_layer: Layer name from which to extract features. Look into documentation of the models for layer names.
+                 If feature_layer is none, then only the fully connected classification layers get removed. 'block5_pool'
+- trainable_features: If the feature extractor is trainable. Default: False
+- temporal: How to model the temporal component. One of 'LSTM', 'CONV'. Default: 'LSTM'
+- LSTM_size: Each list entry is a lstm layer with this number of units. Default: [32]
+- CONV_filter: Each list entry is a 1d convolution layer with this number of filters. Length has to be equal to CONV_filter_size. Default: [64]
+- CONV_filter_size: Each list entry is a 1d convolution layer with this filter size. Length has to be equal to CONV_filter. Default: [3]
+- nr_classes: Number of classes to classify. Default: 2
 
+As an example, if one sets `temporal: 'LSTM'`, `LSTM_size: [64, 64]`,  and `base_model:'VGG16'`. Then the model will use VGG16 to extract features and then feed this features to two stacked lstm layers with 64 units each. All the other parameters wil be set to their default value. 
+```python
+from camclassifier import CameraMovementClassifier
+
+model = CameraMovementClassifier.build_model(base_model='VGG16', temporal='LSTM', LSTM_size=[64, 64])
+```
+
+One can also create a model directly from a config file with:
+```python
+from camclassifier import CameraMovementClassifier
+
+model = CameraMovementClassifier.build_model_from_config('config.yml')
+```
+
+Prediction can be done with:
+```python
+model.predict(x, batch_size=batch_size)
+```
+Note that the shape of x has to be `(batch, window_size, width, height, channels)`. Therefore arbitrarily long shots are not supported by this model and a `window_size` long subshot has first to be extracted. This can be achieved with the included [DataLoader](#dataloader). As this is a tensorflow.keras model, the documentation of the keras api can be found [here](https://www.tensorflow.org/api_docs/python/tf/keras/Model#predict).
 ### Inference Model
 ### DataLoader
 
