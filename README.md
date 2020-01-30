@@ -105,10 +105,33 @@ This is the file-format that is used to create datasets from. The general file i
 file_path1 classification start_frame end_frame
 file_path2 classification start_frame end_frame
 ```
-In the [Develop][#develop] folder are several scripts that can be used to generate these flists. 
+In the [Develop](#data-preparation) folder are several scripts that can be used to generate these flists. 
 
 #### Pipelines
+This class offers several pipelines adhering to the tensorflow keras api and can therefore be used directly with methods such as fit, predict etc. and a generator that can be used for the [InferenceModel](#inferencemodel). The batch size can be specified for the tensorflow pipelines. These pipelines return tensors. The generator returns numpy arrays.
 
+The available pipelines are:
+- `training_pipeline`: Iterates over the whole dataset. Used for training. Shots are of `window_size` length.
+- `balanced_pipeline`: Resampled, repeating dataset, such that every class is equally likely to be sampled. Shots are of `window_size` length. `steps_per_epoch` has to be specified for training.
+- `training_pipeline_repeating`: Iterates repeatedly over the dataset. Used if `steps_per_epoch` is used. Shots are of `window_size` length.
+- `validation_pipeline`: Iterates over the whole dataset. Used for validation. Shots are of `window_size` length.
+- `py_iterator`:  Python generator that extracts complete shots, iterating over the whole dataset. Shots have arbitrary length.
+
+The basic usage is:
+```python
+from camclassifier.DataLoader import DataLoader
+
+training_configs = DataLoader.get_args_from_config('config.yml')
+test_set = DataLoader(**training_configs.get('test'))
+test_pipeline = test_set.validation_pipeline(batch_size=16)
+for shot, label in test_pipeline:
+    # Do something
+
+complete_shots_generator = test_set.py_iterator()
+
+for shot, label, file_name in complete_shots_generator:
+    # Do something
+```
 ## Demo
 
 ## Develop
