@@ -1,4 +1,4 @@
-from tensorflow.keras.layers import TimeDistributed, Flatten, LSTM, Conv1D, GlobalAveragePooling1D, Dense
+from tensorflow.keras.layers import TimeDistributed, Flatten, LSTM, Conv1D, GlobalAveragePooling1D
 from tensorflow.keras import Model, Input
 from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.keras.applications.densenet import DenseNet121
@@ -11,6 +11,7 @@ base_model_dict = {'VGG16': VGG16,
                    'VGG19': VGG19,
                    'ResNet': ResNet50,
                    'DenseNet': DenseNet121}
+
 
 def build_model(input_size: Tuple[int, int, int] = (224, 224, 3),
                 window_size: int = 16,
