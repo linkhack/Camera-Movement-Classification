@@ -1,5 +1,5 @@
 from camclassifier.DataLoader import DataLoader
-from camclassifier.Camera_Movement_Classifier import build_model_from_config
+from camclassifier.CameraMovementClassifier import build_model_from_config
 import camclassifier.utils.utils as utils
 import tensorflow as tf
 from tensorflow import keras

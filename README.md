@@ -5,7 +5,9 @@ one of the three classes pan, tilt and tracking. Pan is a horizontal rotation, t
 Tracking is filming from a moving platform.
 
 The data stems from the digitalization of historical videos from around the second world war. The quality and camera
-parameters can widely vary from shot to shot.
+parameters can widely vary from shot to shot. The dataset can be found on http://efilms.ushmm.org/
+and https://imediacities.hpc.cineca.it/. 
+
 
 ## Package
 ###Installation
@@ -18,4 +20,5 @@ parameters can widely vary from shot to shot.
 ## Develop
 ### Data Preparation
 ### Training
+### Tensorboard
 ### Evaluation
