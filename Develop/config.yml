@@ -3,22 +3,55 @@ model:
   feature_layer: 'block5_pool'
   trainable_features: False
   temporal: 'LSTM' # one of LSTM or CONV
-  LSTM_size: [32] # Size of LSTM Layer, multiple values correspond to stacked LSTM layers. Used if temporal is LSTM
+  LSTM_size: [256] # Size of LSTM Layer, multiple values correspond to stacked LSTM layers. Used if temporal is LSTM
   CONV_filters: [128] # Number of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
   CONV_filter_sizes: [3] # Size of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
-  stride: 5 # Stride used in extracting frames from shots
+  stride: 3 # Stride used in extracting frames from shots
   inference_model: False # Average over whole shot, or only on random subshot. Ignored while training
-  load_weights: # Load weights of a pretrained network. .h5 file expected
-  input_size: (224, 224, 3) # Video shape, (width, height, channels)
-  classes: 2 # Number of classes
+  load_weights: # Load weights of a pretrained network. .h5 file expected. Can be used for finetuning, training continuation or inference
+  input_size: [224, 224, 3] # Video shape, (width, height, channels)
+  nr_classes: 2 # Number of classes
 
 training:
+  #Parallelize Input pipeline on cpu
   number_threads: 2
-  batch_size: 4
-  training_set: ''
-  validation_set: ''
-  test_set: ''
+
+  batch_size: 1
+
+  # Path to flist file corresponding to the datasets used.
+  training_set: 'annotation/train_shots.flist'
+  validation_set: 'annotation/val_shots.flist'
+  test_set: 'annotation/test_shots.flist'
+
+  #If the training set should be balanced
+  balanced_training: False
+
+  # If class weights should be used (small class has larger influence on loss than large class)
+  use_class_weights: True
+
+
+  # Name of the preprocess (as defined in preprocess_dict in DataLoader). Supported are 'VGG16', 'VGG19', 'ResNet', 'DenseNet', ''
+  # Uses the default preprocess corresponding to the model with this name.
+  # If this is not set the preprocess of the model selected in base_model will be used.
+  # If this is set to '' then the preprocess just remaps images to the range [-1,1]
+  preprocess_name:
+
+  # Histogramm equalization as preprocess
+  equalize_histogram: True
+
+  #ADAM optimizer parameters
   adam_lr: 0.0001
   adam_epsilon: 0.1
-  model_logs_basepath: 'model_logs'
-  model_checkpoints_basepath: 'model_checkpoints'
+
+  #Epochs
+  max_epochs: 100
+
+  #Steps per epoch. This has to be set if the dataset is balanced. Otherwise each epoch corresponds to one whole Dataset.
+  steps_per_epoch:
+
+  #Early Stopping
+  early_stopping_patience: 15
+
+  # Logging
+  model_logs_basepath: 'model_logs' #tensorboard
+  model_checkpoints_basepath: 'model_checkpoints' #h5 files path

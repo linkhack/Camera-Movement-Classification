@@ -1,4 +1,4 @@
-from tensorflow.keras.layers import TimeDistributed, Flatten, LSTM, Conv1D, GlobalAveragePooling1D
+from tensorflow.keras.layers import TimeDistributed, Flatten, LSTM, Conv1D, GlobalAveragePooling1D, Dense
 from tensorflow.keras import Model, Input
 from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.keras.applications.densenet import DenseNet121
@@ -22,7 +22,7 @@ def build_model(input_size: Tuple[int, int, int] = (224, 224, 3),
                 LSTM_size: List[int] = None,
                 CONV_filter: List[int] = None,
                 CONV_filter_size: List[int] = None,
-                classes: int = 2,
+                nr_classes: int = 2,
                 ):
     """
     Builds the classification model
@@ -37,18 +37,18 @@ def build_model(input_size: Tuple[int, int, int] = (224, 224, 3),
     :param LSTM_size: Each list entry is a lstm layer with this number of units
     :param CONV_filter: Each list entry is a conv layer with this number of filters. Length has to be equal to CONV_filter_size
     :param CONV_filter_size: Each list entry is a conv layer with this filter size. Length has to be equal to CONV_filter
-    :param classes: Number of classes to classify
+    :param nr_classes: Number of classes to classify
     :return: tensorflow keras model
     """
     # Default Arguments
     if CONV_filter_size is None:
-        CONV_filter_sizes = [3]
+        CONV_filter_size = [3]
     if CONV_filter is None:
-        CONV_filters = [64]
+        CONV_filter = [64]
     if LSTM_size is None:
         LSTM_size = [32]
 
-    if len(CONV_filter_size) != CONV_filter:
+    if len(CONV_filter_size) != len(CONV_filter):
         raise ValueError('Length of CONV_filters and CONV_filter_sizes has to be equal')
 
     # Calculate input shape (frames, width, height, channels)
@@ -80,7 +80,7 @@ def build_model(input_size: Tuple[int, int, int] = (224, 224, 3),
         # Timewise 1D convolution
         for filters, filter_size in zip(CONV_filter, CONV_filter_size):
             x = Conv1D(filter_size, filter_size, activation='relu')(x)
-    x = TimeDistributed(Dense(classes, activation='softmax'))
+    x = TimeDistributed(Dense(nr_classes, activation='softmax'))(x)
     output = GlobalAveragePooling1D()(x)
     model = Model(inputs=inputs, outputs=output)
 
@@ -104,10 +104,10 @@ def build_model_from_config(config_file: str):
     :return:
     """
     stream = open(config_file, 'r')
-    config = yaml.load(stream, Loader=yaml.BaseLoader)
+    config = yaml.load(stream, Loader=yaml.SafeLoader)
     model_config = config.get('model', dict())
 
-    input_size = model_config.get('input_size',(224, 224, 3))
+    input_size = tuple(model_config.get('input_size',(224, 224, 3)))
     window_size = model_config.get('window_size', 16)
     base_model = model_config.get('base_model', 'VGG16')
     feature_layer = model_config.get('feature_layer', None)
@@ -116,7 +116,7 @@ def build_model_from_config(config_file: str):
     LSTM_size = model_config.get('LSTM_size', None)
     CONV_filter = model_config.get('CONV_filter', None)
     CONV_filter_size = model_config.get('CONV_filter_size', None)
-    classes = model_config.get('classes', 2)
+    nr_classes = model_config.get('nr_classes', 2)
 
     return build_model(input_size=input_size,
                        window_size=window_size,
@@ -127,5 +127,5 @@ def build_model_from_config(config_file: str):
                        LSTM_size=LSTM_size,
                        CONV_filter=CONV_filter,
                        CONV_filter_size=CONV_filter_size,
-                       classes=classes
+                       nr_classes=nr_classes
                        )

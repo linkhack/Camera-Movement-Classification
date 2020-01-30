@@ -1,4 +1,4 @@
 name = "camclassifier"
 
-import camclassifier.camera_classification_model
+import camclassifier.Camera_Movement_Classifier
 import camclassifier.DataLoader
