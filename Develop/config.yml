@@ -9,7 +9,8 @@ model:
   stride: 5 # Stride used in extracting frames from shots
   inference_model: False # Average over whole shot, or only on random subshot. Ignored while training
   load_weights: # Load weights of a pretrained network. .h5 file expected
-  input_size: (224, 224, 3)
+  input_size: (224, 224, 3) # Video shape, (width, height, channels)
+  classes: 2 # Number of classes
 
 training:
   number_threads: 2
