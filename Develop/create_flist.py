@@ -12,10 +12,6 @@ parser.add_argument('--annotation', default='./annotations.csv', type=str,
 
 parser.add_argument('--output', default='./annotation.flist', type=str,
                     help = 'Output file')
-parser.add_argument('--create-list', default='1', type = int,
-                    help="Create file list and annotation")
-parser.add_argument('--is_shuffled', default='1', type=int,
-                    help='Needed to be shuffled.')
 
 categories = {
     'pan':0,
@@ -61,8 +57,6 @@ if __name__ == "__main__":
                 classification = categories.get(row[classification_index].strip())
                 print(row[classification_index])
                 movie_name = row[name_index]
-                if classification == 2:
-                    continue
 
                 file_path =  Path(args.folder_path + "/" + movie_name + ".mp4").absolute().as_posix()
                 #Parse fileinfo

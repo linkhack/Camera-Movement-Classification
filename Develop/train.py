@@ -12,7 +12,7 @@ import os,datetime
 model = build_model()
 model.summary()
 
-stride=5
+stride=3
 training_set = DataLoader.DataLoader('annotation/train_shots.flist', (224,224), stride=stride)
 trainings_pipeline = training_set.training_pipeline(4)
 
@@ -51,7 +51,7 @@ callbacks = [
         # "no longer improving" being defined as "no better than 1e-2 less"
         min_delta=1e-3,
         # "no longer improving" being further defined as "for at least 2 epochs"
-        patience=15,
+        patience=10,
         restore_best_weights=True,
         verbose=1)
 ]
