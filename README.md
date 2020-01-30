@@ -41,7 +41,7 @@ Prediction can be done with:
 model.predict(x, batch_size=batch_size)
 ```
 Note that the shape of x has to be `(batch, window_size, width, height, channels)`. Therefore arbitrarily long shots are not supported by this model and a `window_size` long subshot has first to be extracted. This can be achieved with the included [DataLoader](#dataloader). As this is a tensorflow.keras model, the documentation of the keras api can be found [here](https://www.tensorflow.org/api_docs/python/tf/keras/Model#predict).
-### Inference Model
+### InferenceModel
 This model is used for inference. It can classify a arbitrarily long shot. This model uses a sliding window approach. Each `window_size' long subshot is predicted using a CameraMovementClassifier base model. The average over all predictions is the final prediction. The model is configurable with the config.yml file. If one comments or deletes a line, then this parameter will be set to default values.
 
 The model is configurable through following parameters:
@@ -72,6 +72,42 @@ inference_model.batch_predict([shot1, shot2, shot3])
 ```
 Shot should have the shape (frames, width, height, channels). The method `batch_predict(shots)` has as input a list of shots where each shot can have a different number of frames, but width, height and number of channels have to be the same.
 ### DataLoader
+This class is a wrapper for a tf.data.Dataset. It also does all the preprocessing, batching, padding, random subshot selection, data augmentation and video loading. In essence the Dataset uses a list of data elements as inputs. These elements specify the file path, classification, start frame and end frame. The files get loaded and processed in parallel, than batched and then sent to the gpu or cpu as tensors or as numpy arrays, depending on which pipeline one uses.
+#### Configuration
+The DataLoader can be configured so that it fits with the definition of the [CameraClassificationModel](#cameraclassificationmodel) or [InferenceModel](#inferencemodel) additionally to some directly related to the dataset generation. The available parameters are:
+- dataset_path: Path to flist file.
+- frame_size: Output size of a frame (width, height).
+- frame_number: Number of frames in a window.
+- stride: Take every stride-th frame.
+- preprocess_name: Name of the preprocess. The available preprocesses are given in preprocess_dict.
+                                One of 'VGG16', 'VGG19'. 'ResNet', 'DenseNet' or ''.
+- nr_classes: Number of classes in Dataset.
+- nr_threads: Number of threads to use for video loading/processing. This allows parallel execution of the generation
+                           of elements on the cpu.
+                           
+The class also offers an utility function to create the requaried keyword parameter dictionary for the training, validation and test set automatically from a configuration file. This can be used as follows.
+ ```python
+ from camclassifier.DataLoader import DataLoader
+
+training_configs = DataLoader.get_args_from_config('config.yml')
+training_set = DataLoader(**training_configs.get('training'))
+validation_set = DataLoader(**training_configs.get('validation'))
+test_set = DataLoader(**training_configs.get('test'))
+```
+#### flist
+This is the file-format that is used to create datasets from. The general file is defined like this:
+- Each line is a data element.
+- Each value on a line is separated by a space.
+- The file_path should contain the complete path (best absolute) including file name and file extension
+- Classification is a integer corresponding to a class label. This number should be `0<=classification<nr_classes`
+- Start_frame and End_Frame are the start and end of the shot in frames.
+```
+file_path1 classification start_frame end_frame
+file_path2 classification start_frame end_frame
+```
+In the [Develop][#develop] folder are several scripts that can be used to generate these flists. 
+
+#### Pipelines
 
 ## Demo
 
