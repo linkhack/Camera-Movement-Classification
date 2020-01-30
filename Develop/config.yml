@@ -1,0 +1,22 @@
+model:
+  base_model: 'VGG16' # CNN to use. Needs to be one of VGG16, VGG19, ResNet, DenseNet
+  feature_layer: 'block5_pool'
+  temporal: 'LSTM' # one of LSTM or CONV
+  LSTM_size: [32] # Size of LSTM Layer, multiple values correspond to stacked LSTM layers. Used if temporal is LSTM
+  CONV_filters: [128] # Number of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
+  CONV_filter_sizes: [3] # Size of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
+  stride: 5 # Stride used in extracting frames from shots
+  inference_model: False # Average over whole shot, or only on random subshot. Ignored while training
+  load_weights: # Load weights of a pretrained network. .h5 file expected
+  input_size: [224, 224]
+
+training:
+  number_threads: 2
+  batch_size: 4
+  training_set: ''
+  validation_set: ''
+  test_set: ''
+  adam_lr: 0.0001
+  adam_epsilon: 0.1
+  model_logs_basepath: 'model_logs'
+  model_checkpoints_basepath: 'model_checkpoints'
