@@ -42,6 +42,35 @@ model.predict(x, batch_size=batch_size)
 ```
 Note that the shape of x has to be `(batch, window_size, width, height, channels)`. Therefore arbitrarily long shots are not supported by this model and a `window_size` long subshot has first to be extracted. This can be achieved with the included [DataLoader](#dataloader). As this is a tensorflow.keras model, the documentation of the keras api can be found [here](https://www.tensorflow.org/api_docs/python/tf/keras/Model#predict).
 ### Inference Model
+This model is used for inference. It can classify a arbitrarily long shot. This model uses a sliding window approach. Each `window_size' long subshot is predicted using a CameraMovementClassifier base model. The average over all predictions is the final prediction. The model is configurable with the config.yml file. If one comments or deletes a line, then this parameter will be set to default values.
+
+The model is configurable through following parameters:
+- base_model: Model used to classify each window.
+- window_size: Window size in frames. 
+- window_stride: Take every `stride` frame.
+- nr_classes: Number of classes to classify.
+
+A InferenceModel can be constructed in the following way
+```python
+import tensorflow as tf
+from camclassifier.InferenceModel import InferenceModel
+
+base_model = tf.keras.models.load_model(base_model_path)
+inference_model = InferenceModel(base_model=base_model, window_size=16, window_stride=3, nr_classes=2)
+```
+Alternatively it can also be directly created from a config file
+```python
+from camclassifier.InferenceModel import InferenceModel
+
+inference_model = InferenceModel.build_model_from_config('config.yml')
+```
+
+Prediction can be done with:
+```python
+inference_model.predict(shot)
+inference_model.batch_predict([shot1, shot2, shot3])
+```
+Shot should have the shape (frames, width, height, channels). The method `batch_predict(shots)` has as input a list of shots where each shot can have a different number of frames, but width, height and number of channels have to be the same.
 ### DataLoader
 
 ## Demo
