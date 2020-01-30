@@ -22,7 +22,7 @@ class DataLoader:
                       'DenseNet': densenet.preprocess_input,
                       '':lambda x: imagenet_utils.preprocess_input(x, mode='tf')}
 
-    def __init__(self, dataset_path: str, frame_size: Tuple[int, int], frame_number: int = 16, stride:int = 1, preprocess_name:str='VGG16', nr_classes:int = 2):
+    def __init__(self, dataset_path: str, frame_size: Tuple[int, int], frame_number: int = 16, stride:int = 1, preprocess_name:str='VGG16', nr_classes:int = 2, nr_threads:int = 2):
 
         self.inputs, self.labels = self.process_flist(dataset_path)
 
@@ -33,6 +33,7 @@ class DataLoader:
         self.class_probabilities = list(counts/len(self.inputs))
         print(f"Probability per class {self.class_probabilities}")
 
+        #Statistics
         self.frame_size = frame_size
         self.frame_number = int(frame_number)
         self.stride = int(stride)
@@ -40,7 +41,9 @@ class DataLoader:
         self.length = len(self.inputs)
         self.nr_classes = nr_classes
 
+        #Preprocess
         self.preprocess_fn = DataLoader.preprocess_dict.get(preprocess_name)
+        self.nr_threads = nr_threads
 
         # Create flist dataset
         self.dataset = tf.data.Dataset.from_tensor_slices(self.inputs)
@@ -69,38 +72,31 @@ class DataLoader:
         return dataset.map(self.process_file, num_parallel_calls=4).repeat().batch(batch_size).prefetch(1)
 
     def training_pipeline(self, batch_size: int):
-        # dataset = tf.data.experimental.sample_from_datasets([self.pan, self.tilt, self.tracking],[0.5,0.5,0.5])
-        # return dataset.map(self.process_file, num_parallel_calls=4).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
-        return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=3).batch(
+        return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=self.nr_threads).batch(
+        batch_size).prefetch(1)
+
+    def training_pipeline_repeating(self, batch_size: int):
+        return self.dataset.repeat().shuffle(self.length).map(self.process_file, num_parallel_calls=self.nr_threads).batch(
         batch_size).prefetch(1)
 
     def validation_pipeline(self, batch_size: int):
-        return self.dataset.map(self.process_file, num_parallel_calls=2).batch(batch_size).prefetch(1)
-
-    def test_pipeline(self, batch_size: int):
-        return self.dataset.map(self.load_whole_file, num_parallel_calls=3).batch(batch_size).prefetch(1)
+        return self.dataset.map(self.process_file, num_parallel_calls=self.nr_threads).batch(batch_size).prefetch(1)
 
     def py_iterator(self):
         for item in self.inputs:
             file_name = item[0]
             label = item[1]
             shot = self._load_complete_file_py(item)
-            yield (shot, tf.one_hot(int(label),2))
+            shot = self.preprocess_fn(shot)
+            yield (shot, tf.one_hot(int(label),self.nr_classes), file_name)
 
     def process_file(self, input: Tuple[str, int, int, int]):
 
         vid_shape = [self.frame_number,self.frame_size[0], self.frame_size[1],3]
         shot = tf.py_function(self._process_file_py, [input],tf.float32)
         shot.set_shape(vid_shape)
-        shot = vgg16.preprocess_input(shot)
-        return shot, tf.one_hot(int(input[1]),2)
-
-    def load_whole_file(self, input):
-        vid_shape = [None, self.frame_size[0], self.frame_size[1],3]
-        shot = tf.py_function(self._load_complete_file_py, [input],tf.float32)
-        shot.set_shape(vid_shape)
-        shot =vgg16.preprocess_input(shot)
-        return shot, tf.one_hot(int(input[1]),2)
+        shot = self.preprocess_fn(shot)
+        return shot, tf.one_hot(int(input[1]),self.nr_classes)
 
     def split_classes(self, inputs):
         result = dict()
@@ -114,8 +110,8 @@ class DataLoader:
     def _load_complete_file_py(self, input):
         """
         automatically pad for windowing
-        :param input:
-        :return:
+        :param input: Data record
+        :return: Loaded shot as numpy array
         """
 
         file_name = input[0]
@@ -144,7 +140,6 @@ class DataLoader:
             output_fc+=1
 
         cap.release()
-        buf =buf.astype(dtype=np.float32)
         return buf
 
     def _process_file_py(self, input):
@@ -225,7 +220,8 @@ class DataLoader:
             'frame_size' : tuple(model_config.get('input_size', (224, 224, 3)))[0:2],
             'frame_number' : model_config.get('window_size', 16),
             'nr_classes' : model_config.get('nr_classes', 2),
-            'preprocess_name': preprocess_name
+            'preprocess_name': preprocess_name,
+            'nr_threads': training_config.get('nr_threads', 2)
         }
 
 

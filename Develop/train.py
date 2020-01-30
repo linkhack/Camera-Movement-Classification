@@ -83,9 +83,6 @@ if not os.path.exists(log_dir):
 if not os.path.exists(model_dir):
     os.mkdir(model_dir)
 
-print(log_dir)
-print(model_dir)
-
 # early stopping and epochs
 max_epochs = training_config.get('max_epochs', 100)
 steps_per_epoch = training_config.get('max_epochs', None)
@@ -120,7 +117,7 @@ history = model.fit(trainings_pipeline, epochs=max_epochs, steps_per_epoch=steps
 # Test on test set
 nr_classes = model_config.get('nr_classes', 2)
 cm = np.zeros((nr_classes, nr_classes))
-for x, y in test_pipeline:
+for x, y, filename in test_pipeline:
     y_predict = model.predict(x, batch_size=batch_size)
     y_predict = np.argmax(y_predict[0])
     y_true = np.argmax(y[0])
