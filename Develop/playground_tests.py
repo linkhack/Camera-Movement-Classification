@@ -1,16 +1,11 @@
-from camclassifier.cnnlstm_model import build_model
-from camclassifier import DataLoader
-import camclassifier
-import cv2
-import numpy as np
-import tensorflow as tf
-from pathlib import Path
-import keras
+import yaml
+from typing import List
 
-#model = tf.keras.models.load_model('./model_checkpoints/20191126193611240278/mymodel_5.h5')
+stream = open('config.yml', 'r')
+config = yaml.load(stream, Loader=yaml.SafeLoader)
+print(config)
+print(config.get('model'))
 
-dataset = DataLoader.DataLoader('test.flist',(224,224),stride=3)
+def bla(input:List[int]):
+    print(input)
 
-for x,y in dataset.py_iterator():
-    print(x.shape)
-    print(y)
