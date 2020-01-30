@@ -148,9 +148,60 @@ for shot, label, file_name in complete_shots_generator:
     # Do something
 ```
 ## Demo
-
 ## Develop
 ### Data Preparation
+This repository contains several script to prepare the date for this model. Their usage is explained in this section.
+#### Flist Creation
+There are two scripts that help with generating the flist files.
+
+`create_flist.py --folder_path path/to/folder --annotation path/to/annotation.csv --output annotation/annotation.flist` This script is used to generate flists from the original dataset. 
+- `--folder_path` is the path in which the video files are contained. 
+- `--annotation` is the annotation csv file in which the annotation for the specified folder is stored.
+-' `--output` is the output file in which the flist should be stored
+Unfortunately one has to copy the annotation of the imc and efilms shots manually into one file.
+
+`create_flist_and_training_split_from_shots.py --folder_path path/to/folders --output annotation.flist` This script is used to generate flist directly from folders containing the shots. It also automatically generates a 60%-20%-20% train/val/test split of the dataset. This script assumes following folder structure:
+- path/to/folders
+   - class 1
+      - file1
+      - file2
+      - ...
+ - class 2
+      - file1
+      - file2
+      - ...
+ - ...
+#### Dataset correction
+- `cut_exact_videos.py --folder_path data_folder --annotation annotation.csv --output training_folder`
+- `clean_data.py --folder_path training_folder --annotation corrections.flist --output training_folder`
+- `delete_files --folder_path training_folder/class --annotation corrections.flist` 
+are used in combination to generate the cleaned dataset. If the arguments are the same then they correspond to the same folder or file.
+
+`cut_exact_videos.py --folder_path data_folder --annotation annotation.csv --output training_folder` is used to extract the shots from the whole video files and save them individually in `training_folder/class`. Note that a folder for each class has to be created in `training_folder`. `--folder_path` is the folder with the original videos and `--annotation` is the original csv annotation for this folder.
+
+After running this script we have folders of the form `training_folder/class` for each class containing all the shots of this class. Then one has to manually go through each shot and write the corrections into corrections.flist. This file contains also file_name classification start_frame end_frame as above.
+
+This correction file is then used with `clean_data.py` to cut and reclassify the videos. After running this script a new shot file is generated for each correction. As this doesn't delete the wrong shots that were corrected, we have to run `delete_files.py` to delete the wrong files.
 ### Training
+To run training just execute `train.py`. It uses automatically the provided config file, as long as it is called `config.yml` and is contained in the same folder as `train.py`. In the config file one has to define the [DataLoader](#dataloader) and [CameraClassificationModel](#cameraclassificationmodel) as explained above. Moreover one has to define following fields in `config.yml`under `training:`
+- training_set: Training set flist file.
+- validation_set: Validation set flist file.
+- test_set: Test: set flist file.
+- balanced_training: If the dataset should be resampled, such that every class is equally likely.
+- use_class_weights: If class weights should be used. This gives classes with less data more weight when calculating the loss.
+- adam_lr: Learning rate of adam optimizer.
+- adam_epsilon: Epsilon of adam optimizer.
+- max_epochs: Maximum number of epochs.
+- steps_per_epoch: How many datapoints are one epoch.
+- early_stopping_patience: How often(epochs) can the loss not improve without stopping the training.
+- model_logs_basepath: Basepath for model logs, used for tensorboard.
+- model_checkpoints_basepath: Basepath for model checkpoints, used for saving model and optimizer weights.
+This script automatically creates unique subfolders in the logging/checkpoint folders for each training run. The format of these folders is extractor_layer_trainable_temporal_layers_info_stride_dateuid. This helps in organizing the different runs.
 ### Tensorboard
+A tensorboard visualization can be started with
+```
+tensorboard --logdir model_logs_basepath
+```
+which is then served on localhost.
 ### Evaluation
+
