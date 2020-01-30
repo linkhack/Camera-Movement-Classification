@@ -1,5 +1,5 @@
 from camclassifier import DataLoader
-from camclassifier.cnnlstm_model import build_model
+from camclassifier.camera_classification_model import build_model_from_config
 import camclassifier.utils.utils as utils
 import tensorflow as tf
 from tensorflow import keras
@@ -9,7 +9,7 @@ import numpy as np
 tf.keras.backend.clear_session()
 import os,datetime
 
-model = build_model()
+model = build_model_from_config('config.yml')
 model.summary()
 
 stride=3
