@@ -13,8 +13,10 @@ from keras_applications import imagenet_utils
 
 import yaml
 
-
 class DataLoader:
+    """
+    Class that wraps tf.data.Dataset for video shots and offers different iterators.
+    """
 
     preprocess_dict= {'VGG16': vgg16.preprocess_input,
                       'VGG19': vgg19.preprocess_input,
@@ -22,10 +24,34 @@ class DataLoader:
                       'DenseNet': densenet.preprocess_input,
                       '':lambda x: imagenet_utils.preprocess_input(x, mode='tf')}
 
-    def __init__(self, dataset_path: str, frame_size: Tuple[int, int], frame_number: int = 16, stride:int = 1, preprocess_name:str='VGG16', nr_classes:int = 2, nr_threads:int = 2):
+    def __init__(self, dataset_path: str = None, frame_size: Tuple[int, int]=(224,224), frame_number: int = 16, stride:int = 1, preprocess_name:str='VGG16', nr_classes:int = 2, nr_threads:int = 2):
+        """
+        Used to create a Dataset. Iterators/Pipelines can be created with the different pipeline/iterator function.
+        This class handles the loading of shots from video files. The complete preprocessing is handled by this class.
+        Also the extraction and padding such that each shot has the correct length.
 
-        self.inputs, self.labels = self.process_flist(dataset_path)
+        The dataset should be given in .flist format. This format contains one line for each element of the dataset
+        A line should be as follows:
 
+        file_path classification start_frame end_frame
+
+        File_path is the path to the file(for example data/pan/1823_23893719.mp4). These values are separated by spaces.
+        Classification should be an integer corresponding to the class with 0<=classification<nr_classes
+
+        :param dataset_path: Path to flist file.
+        :param frame_size: Output size of a frame (width, height).
+        :param frame_number: Number of frames in a window.
+        :param stride: Take every stride-th frame.
+        :param preprocess_name: Name of the preprocess. The available preprocess are given in preprocess_dict.
+                                One of 'VGG16', 'VGG19'. 'ResNet', 'DenseNet' or ''.
+        :param nr_classes: Number of classes in Dataset.
+        :param nr_threads: Number of threads to use for video loading/processing. This allows parallel execution of the generation
+                           of elements on the cpu.
+        """
+        if dataset_path is not None:
+            self.inputs, self.labels = self.process_flist(dataset_path)
+        else:
+            self.inputs = self.labels = []
         # labels and counts
         unique, counts = np.unique(self.labels, return_counts=True)
         print(f"Elemets per class {counts}")
@@ -67,22 +93,27 @@ class DataLoader:
 
         return lines, labels
 
-    def balanced_pipeline(self, batch_size):
-        dataset = tf.data.experimental.sample_from_datasets(self.tfdataset_classes_list,[0.5]*len(self.tfdataset_classes_list))
+    def balanced_pipeline(self, batch_size: int):
+        """ Resampled pipeline, such that every class is equally likely to be sampled. Shots are of window_size length."""
+        dataset = tf.data.experimental.sample_from_datasets(self.tfdataset_classes_list,[1/self.nr_classes]*len(self.tfdataset_classes_list))
         return dataset.map(self.process_file, num_parallel_calls=4).repeat().batch(batch_size).prefetch(1)
 
     def training_pipeline(self, batch_size: int):
+        """ Iterates over whole dataset. Used for training. Shots are of window_size length."""
         return self.dataset.shuffle(self.length).map(self.process_file, num_parallel_calls=self.nr_threads).batch(
         batch_size).prefetch(1)
 
     def training_pipeline_repeating(self, batch_size: int):
+        """ Iterates repeatedly over dataset. Used if steps_per_epoch is set in model.fit / config. Shots are of window_size length."""
         return self.dataset.repeat().shuffle(self.length).map(self.process_file, num_parallel_calls=self.nr_threads).batch(
         batch_size).prefetch(1)
 
     def validation_pipeline(self, batch_size: int):
+        """ Iterates over whole dataset. Used for validation. Shots are of window_size length."""
         return self.dataset.map(self.process_file, num_parallel_calls=self.nr_threads).batch(batch_size).prefetch(1)
 
     def py_iterator(self):
+        """ Python generator that extracts complete shots. Shots have arbitrary length."""
         for item in self.inputs:
             file_name = item[0]
             label = item[1]
@@ -91,7 +122,7 @@ class DataLoader:
             yield (shot, tf.one_hot(int(label),self.nr_classes), file_name)
 
     def process_file(self, input: Tuple[str, int, int, int]):
-
+        """Extracts subshot. Input tuple is (file_path, classification. start_frame, end_frame)"""
         vid_shape = [self.frame_number,self.frame_size[0], self.frame_size[1],3]
         shot = tf.py_function(self._process_file_py, [input],tf.float32)
         shot.set_shape(vid_shape)
@@ -99,6 +130,7 @@ class DataLoader:
         return shot, tf.one_hot(int(input[1]),self.nr_classes)
 
     def split_classes(self, inputs):
+        """Splits the dataset according to the class label."""
         result = dict()
         for element in inputs:
             result.get(int(element[1]),[]).append(element)
@@ -109,7 +141,7 @@ class DataLoader:
 
     def _load_complete_file_py(self, input):
         """
-        automatically pad for windowing
+        automatically pad for windowing.
         :param input: Data record
         :return: Loaded shot as numpy array
         """
@@ -140,6 +172,38 @@ class DataLoader:
             output_fc+=1
 
         cap.release()
+        return buf
+
+    def load_complete_shot(self, file_name):
+        """
+        Used to load a single file and return its content as numpy array
+        :param file_name:
+        :return:
+        """
+        cap = cv2.VideoCapture(file_name)
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        frameEnd = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        frameStart = 0
+
+        start_shot = 1000. * frameStart / fps
+
+        duration = min(frameEnd - frameStart, 32 * self.stride * (self.frame_number - 1))
+
+        padded_duration = max(duration, self.stride * (self.frame_number - 1) + 1)
+        buf = np.empty((padded_duration, self.frame_size[0], self.frame_size[1], 3), np.dtype('uint8'))
+
+        cap.set(cv2.CAP_PROP_POS_MSEC, start_shot)
+        output_fc = 0
+        ret = True
+        while (output_fc < duration and ret):
+            ret, frame = cap.read()
+            if ret:
+                frame = cv2.resize(frame, self.frame_size)
+                buf[output_fc] = util.img_as_ubyte(exposure.equalize_hist(frame))
+            output_fc += 1
+
+        cap.release()
+        buf = self.preprocess_fn(buf)
         return buf
 
     def _process_file_py(self, input):
@@ -191,14 +255,15 @@ class DataLoader:
     def get_args_from_config(config_file: str):
         """
         Parser config file and returns a dict that holds the keyword - parameter dictionary for the training, validation and
-        test set
+        test set.
         Usage:
             training_configs = DataLoader.get_args_from_config('config.yml')
-            training_set = DataLoader(**training_configs.get('training')
-            validation_set = DataLoader(**training_configs.get('validation')
-            test_set = DataLoader(**training_configs.get('test')
+            training_set = DataLoader(**training_configs.get('training'))
+            validation_set = DataLoader(**training_configs.get('validation'))
+            test_set = DataLoader(**training_configs.get('test'))
+
         :param config_file: Path to config file
-        :return: Dictionary of keyword - parameter dictionaries for training, test and validation
+        :return: Dictionary of keyword - parameter dictionaries for training, test, validation and loading without Dataset
         """
         # Load config
         stream = open('config.yml', 'r')
@@ -236,7 +301,8 @@ class DataLoader:
         result = {
             'training': training,
             'validation': validation,
-            'test': test
+            'test': test,
+            'base': base
         }
 
         return result

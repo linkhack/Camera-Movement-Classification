@@ -41,7 +41,7 @@ cm = np.zeros((nr_classes, nr_classes))
 if inference_model:
     # Classification from whole shot
     test_set = dataset.py_iterator()
-    end_model = InferenceModel(base_model=base_model,window_size=window_size,window_stride=stride)
+    end_model = InferenceModel(base_model=base_model,window_size=window_size,window_stride=stride, nr_classes=nr_classes)
     for x, y, file_name in tqdm.tqdm(test_set, total=dataset.length):
         y_predict = end_model.predict(x)
         y_predict = np.argmax(y_predict[0])

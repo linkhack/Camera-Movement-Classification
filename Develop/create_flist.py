@@ -9,7 +9,6 @@ parser.add_argument('--folder_path', default='./training_data', type=str,
                     help='The folder path to videos.')
 parser.add_argument('--annotation', default='./annotations.csv', type=str,
                     help='The annotation file.')
-
 parser.add_argument('--output', default='./annotation.flist', type=str,
                     help = 'Output file')
 

@@ -101,7 +101,7 @@ def build_model_from_config(config_file: str):
     parameters are filled by their default value
 
     :param config_file: Path to config
-    :return:
+    :return: A tensorflow.keras model
     """
     stream = open(config_file, 'r')
     config = yaml.load(stream, Loader=yaml.SafeLoader)
