@@ -64,6 +64,7 @@ The model is configurable through following parameters:
 - window_size: Window size in frames. 
 - window_stride: Take every `stride` frame.
 - nr_classes: Number of classes to classify.
+- class_dict: Dictionary used to encode classes. Should have entries with class_name: integer. Where the integers are consecutive from 0 to nr_classes-1
 
 A InferenceModel can be constructed in the following way
 ```python
@@ -82,10 +83,12 @@ inference_model = InferenceModel.build_model_from_config('config.yml')
 
 Prediction can be done with:
 ```python
-inference_model.predict(shot)
-inference_model.batch_predict([shot1, shot2, shot3])
+inference_model.predict(shot, movie_id, shot_id, csv_file)
+inference_model.batch_predict([(shot1, movie_id1, shot_id1), (shot2, movie_id2, shot_id2), (shot3, movie_id3, shot_id3)], csv_file)
 ```
-Shot should have the shape (frames, width, height, channels). The method `batch_predict(shots)` has as input a list of shots where each shot can have a different number of frames, but width, height and number of channels have to be the same.
+Shot should have the shape (frames, width, height, channels). The method `batch_predict(shots)` has as input a list of shots where each shot can have a different number of frames, but width, height and number of channels have to be the same. The id's are used to identify prediction. The result is a numpy array of the form `[movie_id, shot_id, prediction], where the prediction is decoded into a string(name of class). Moreover if one specifies the csv_file parameter, then the predictions will be appended to the specified csv file. If this parameter is not given, or `None`, then the predictions are not written into a file.
+
+Additionally this class offers the function `evaluate(shot)`, which just returns the raw softmax score instead of the classification. This is used to evaluate the model.
 ### DataLoader
 This class is a wrapper for a tf.data.Dataset. It also does all the preprocessing, batching, padding, random subshot selection, data augmentation and video loading. In essence the Dataset uses a list of data elements as inputs. These elements specify the file path, classification, start frame and end frame. The files get loaded and processed in parallel, than batched and then sent to the gpu or cpu as tensors or as numpy arrays, depending on which pipeline one uses.
 #### Configuration
@@ -147,8 +150,12 @@ complete_shots_generator = test_set.py_iterator()
 for shot, label, file_name in complete_shots_generator:
     # Do something
 ```
+
+One can also load a single file with the correct processing steps with the function `load_complete_shot(file_name)`. This function returns the shot as a numpy array.
 ## Demo
+The demo consists of two scripts, one to classify single files and one to classify complete folders. In the demofolder is a minimal configuration file, where all unneeded fields were deleted. 
 ## Develop
+In this folder are all development related scripts. Moreover a complete configuration file is also provided. With this file the model architecture, training procedure and evaluation mode can be completly defined.
 ### Data Preparation
 This repository contains several script to prepare the date for this model. Their usage is explained in this section.
 #### Flist Creation
