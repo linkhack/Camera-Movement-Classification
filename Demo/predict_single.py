@@ -5,8 +5,8 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--folder', default='./Data', type=str,
-                    help='The folder path to shots.')
+parser.add_argument('--file', default='./Data/tilt_4_65457.mp4', type=str,
+                    help='The file to classify.')
 if __name__ == '__main__':
     args = parser.parse_args()
     file = args.file
