@@ -4,11 +4,11 @@ model:
   trainable_features: False
   temporal: 'LSTM' # one of LSTM or CONV
   LSTM_size: [32] # Size of LSTM Layer, multiple values correspond to stacked LSTM layers. Used if temporal is LSTM
-  CONV_filters: [128] # Number of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
-  CONV_filter_sizes: [3] # Size of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
+  CONV_filters: [64,64,64] # Number of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
+  CONV_filter_sizes: [3,3,3] # Size of filters in conv temporal layer. Multiple values correspond to stacked conv layers. Used if temporal is CONV
   window_size: 16 # Size window
   stride: 3 # Stride used in extracting frames from shots
-  load_weights: 'model_checkpoints/block5_pool_vgg16_32/mymodel_21.h5'# Load weights of a pretrained network. .h5 file expected. Can be used for finetuning, training continuation or inference
+  load_weights: # Load weights of a pretrained network. .h5 file expected. Can be used for finetuning, training continuation or inference
   input_size: [224, 224, 3] # Video shape, (width, height, channels)
   nr_classes: 2
   class_dict:
@@ -17,7 +17,7 @@ model:
 
 training:
   #Parallelize Input pipeline on cpu
-  nr_threads: 2
+  nr_threads: 4
 
   #batch size
   batch_size: 4
@@ -37,7 +37,7 @@ training:
   # Uses the default preprocess corresponding to the model with this name.
   # If this is not set the preprocess of the model selected in base_model will be used.
   # If this is set to '' then the preprocess just remaps images to the range [-1,1]
-  preprocess_name:
+  preprocess_name: 'VGG16'
 
   #ADAM optimizer parameters
   adam_lr: 0.0001

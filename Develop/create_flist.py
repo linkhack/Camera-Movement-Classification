@@ -27,7 +27,7 @@ if __name__ == "__main__":
         annotation_csv.seek(0)
         annotation_reader = csv.reader(annotation_csv, dialect)
 
-        # Column index for relevant information. befause format varies
+        # Column index for relevant information. because format varies
         # gets set while parsing first row of document
         move_id_index = shot_id_index = start_frame_index = end_frame_index = classification_index = name_index = 0
         annotation_list = []

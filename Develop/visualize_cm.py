@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from camclassifier.utils.confusion_matrix_pretty_print import pretty_plot_confusion_matrix
+from confusion_matrix_pretty_print import pretty_plot_confusion_matrix
 
 if __name__ == '__main__':
     cm = np.array([[421, 72, 151],
