@@ -19,7 +19,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires = [
-        'tensorflow==2.0',
+        'tensorflow==2.0.2',
         'keras',
         'pyyaml',
         'scikit-image',
