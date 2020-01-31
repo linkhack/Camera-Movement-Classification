@@ -153,7 +153,9 @@ for shot, label, file_name in complete_shots_generator:
 
 One can also load a single file with the correct processing steps with the function `load_complete_shot(file_name)`. This function returns the shot as a numpy array.
 ## Demo
-The demo consists of two scripts, one to classify single files and one to classify complete folders. In the demofolder is a minimal configuration file, where all unneeded fields were deleted. 
+The demo consists of two scripts, one to classify single files and one to classify complete folders. In the demofolder is a minimal configuration file, where all unneeded fields were deleted. The config will work with the given folder structure. You can specify the `csv_file` field to save the results into a csv-file. If one omits this the results will just be printed on the console.
+
+- ``
 ## Develop
 In this folder are all development related scripts. Moreover a complete configuration file is also provided. With this file the model architecture, training procedure and evaluation mode can be completly defined.
 ### Data Preparation
