@@ -21,7 +21,7 @@ The data stems from the digitalization of historical videos from around the seco
 
 ## Package
 ### Installation
-As this package uses tensorflow 2.0.1 and gpu acceleration. Therefor you have to have CUDA 10.0 installed. Please follow the tensorflow instructions [here](https://www.tensorflow.org/install/gpu), but instead of installing CUDA10.1, install CUDA10.0.
+As this package uses tensorflow 2.0.1 and gpu acceleration you have to have CUDA 10.0 installed. Please follow the tensorflow instructions [here](https://www.tensorflow.org/install/gpu), but instead of installing CUDA10.1, install CUDA10.0. Alternatively you can also try to install the tensorflow backand that fits your architecture after installing this package. It should be tensorflow 2.0 or 2.1 and the project wasn't tested on tensorflow 2.1.
 
 The package can be installed in two ways. Either directly from your local machine or from github. If you want to install it directly from github use:
 ```
@@ -93,8 +93,8 @@ inference_model = InferenceModel.build_model_from_config('config.yml')
 
 Prediction can be done with:
 ```python
-inference_model.predict(shot, movie_id, shot_id, csv_file)
-inference_model.batch_predict([(shot1, movie_id1, shot_id1), (shot2, movie_id2, shot_id2), (shot3, movie_id3, shot_id3)], csv_file)
+prediction = inference_model.predict(shot, movie_id, shot_id, csv_file)
+batch_prediction = inference_model.batch_predict([(shot1, movie_id1, shot_id1), (shot2, movie_id2, shot_id2), (shot3, movie_id3, shot_id3)], csv_file)
 ```
 Shot should have the shape (frames, width, height, channels). The method `batch_predict(shots)` has as input a list of shots where each shot can have a different number of frames, but width, height and number of channels have to be the same. The id's are used to identify prediction. The result is a numpy array of the form `[movie_id, shot_id, prediction], where the prediction is decoded into a string(name of class). Moreover if one specifies the csv_file parameter, then the predictions will be appended to the specified csv file. If this parameter is not given, or `None`, then the predictions are not written into a file.
 
@@ -164,8 +164,8 @@ for shot, label, file_name in complete_shots_generator:
 One can also load a single file with the correct processing steps with the function `load_complete_shot(file_name)`. This function returns the shot as a numpy array.
 ## Demo
 The demo consists of two scripts, one to classify single files and one to classify complete folders. In the demofolder is a minimal configuration file, where all unneeded fields were deleted. The config will work with the given folder structure. You can specify the `csv_file` field to save the results into a csv-file. If one omits this the results will just be printed on the console.
-
-- ``
+- `predict_single.py --file Data` classifies the shot `shot.mp4`.
+- `predict_batch.py --folder Data` classifies all shots inside the folder `Data`. 
 ## Develop
 In this folder are all development related scripts. Moreover a complete configuration file is also provided. With this file the model architecture, training procedure and evaluation mode can be completly defined.
 ### Data Preparation
