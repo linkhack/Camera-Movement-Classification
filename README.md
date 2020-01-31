@@ -21,6 +21,16 @@ The data stems from the digitalization of historical videos from around the seco
 
 ## Package
 ### Installation
+As this package uses tensorflow 2.0.1 and gpu acceleration. Therefor you have to have CUDA 10.0 installed. Please follow the tensorflow instructions [here](https://www.tensorflow.org/install/gpu), but instead of installing CUDA10.1, install CUDA10.0.
+
+The package can be installed in two ways. Either directly from your local machine or from github. If you want to install it directly from github use:
+```
+pip install git+https://github.com/linkhack/Camera-Movement-Classification
+```
+One can also install it from local files if you have cloned or downloaded the repoisitory. Assume that the project is in the folder `Camera-Movement-Classification` and this folder contains the `setup.py` script and nothing changed in the folder structure. Then you can install this package also in this way:
+```
+pip install path/to/Camera-Movement-Classification
+```
 ### CameraClassificationModel
 This is the main model of this package. It classifies a window of n frames. The model achitecture is based on the paper "Long-Term Recurrent Convolutional Networks for Visual Recognition and Description" by Donahue et al. [[link](https://arxiv.org/abs/1411.4389)]. The model is configurable with the config.yml file. If one comments or deletes a line, then this parameter will be set to default values.
 
