@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="camclassifier-Patrick-Link", # Replace with your own username
+    name="camclassifier-cvl", # Replace with your own username
     version="0.0.1",
     author="Patrick Link",
     author_email="e11728332@student.tuwien.ac.at",
