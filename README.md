@@ -169,7 +169,11 @@ The demo consists of two scripts, one to classify single files and one to classi
 
 If you want to retrain or finetune the model refer to [training](#training)
 ## Develop
-In this folder are all development related scripts. Moreover a complete configuration file is also provided. With this file the model architecture, training procedure and evaluation mode can be completly defined.
+In this folder are all development related scripts. Moreover a complete configuration file is also provided. With this file the model architecture, training procedure and evaluation mode can be completly defined. Some scripts have additional dependencies. These are:
+```
+tqdm
+seaborn
+```
 ### Data Preparation
 This repository contains several script to prepare the date for this model. Their usage is explained in this section.
 #### Flist Creation
