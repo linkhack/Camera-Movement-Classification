@@ -93,10 +93,10 @@ inference_model = InferenceModel.build_model_from_config('config.yml')
 
 Prediction can be done with:
 ```python
-prediction = inference_model.predict(shot, movie_id, shot_id, csv_file)
-batch_prediction = inference_model.batch_predict([(shot1, movie_id1, shot_id1), (shot2, movie_id2, shot_id2), (shot3, movie_id3, shot_id3)], csv_file)
+result = inference_model.predict(shot, movie_id, shot_id, csv_file)
+result = inference_model.batch_predict([(shot0, movie_id0, shot_id0), (shot1, movie_id1, shot_id1), (shot2, movie_id2, shot_id2)], csv_file)
 ```
-Shot should have the shape (frames, width, height, channels). The method `batch_predict(shots)` has as input a list of shots where each shot can have a different number of frames, but width, height and number of channels have to be the same. The id's are used to identify prediction. The result is a numpy array of the form `[movie_id, shot_id, prediction], where the prediction is decoded into a string(name of class). Moreover if one specifies the csv_file parameter, then the predictions will be appended to the specified csv file. If this parameter is not given, or `None`, then the predictions are not written into a file.
+Shot should have the shape (frames, width, height, channels). The method `batch_predict(shots)` has as input a list of shots where each shot can have a different number of frames, but width, height and number of channels have to be the same. The id's are used to identify prediction. The result is a numpy array of the form `[movie_id, shot_id, prediction]`, where the prediction is decoded into a string(name of class). If one classifies a batch of shots, than `result[i]` will be the classification of the shot i. Moreover if one specifies the csv_file parameter, then the predictions will be appended to the specified csv file. If this parameter is not given, or `None`, then the predictions are not written into a file.
 
 Additionally this class offers the function `evaluate(shot)`, which just returns the raw softmax score instead of the classification. This is used to evaluate the model.
 ### DataLoader
@@ -165,7 +165,9 @@ One can also load a single file with the correct processing steps with the funct
 ## Demo
 The demo consists of two scripts, one to classify single files and one to classify complete folders. In the demofolder is a minimal configuration file, where all unneeded fields were deleted. The config will work with the given folder structure. You can specify the `csv_file` field to save the results into a csv-file. If one omits this the results will just be printed on the console.
 - `predict_single.py --file Data` classifies the shot `shot.mp4`.
-- `predict_batch.py --folder Data` classifies all shots inside the folder `Data`. 
+- `predict_batch.py --folder Data` classifies all shots inside the folder `Data`.
+
+If you want to retrain or finetune the model refer to [training](#training)
 ## Develop
 In this folder are all development related scripts. Moreover a complete configuration file is also provided. With this file the model architecture, training procedure and evaluation mode can be completly defined.
 ### Data Preparation
@@ -221,6 +223,6 @@ A tensorboard visualization can be started with
 ```
 tensorboard --logdir model_logs_basepath
 ```
-which is then served on localhost.
+which is then served on `localhost:6006`.
 ### Evaluation
-
+The performance of a model can be checked with the script `test_inference.py`. One can define the test set, the model and the mode in the config file under `inference:`. The setting `inference_model` sets if a `CameraClassificationModel` or a `InferenceModel` is used, where a value of `True` forces the model to be a `InferenceModel`. The difference is that the `CameraClassificationModel` classifies a random subshot and `InferenceModel` classifies the whole shot. 
