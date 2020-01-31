@@ -23,6 +23,23 @@ class InferenceModel:
         # reverse so we have encoding: name
         self.class_dict = {v: k for k,v in self.class_dict.items()}
 
+    def evaluate(self, shot):
+        """
+        Returns raw softmax scores to evaluate model.
+        :param shot: arbitrary length shot
+        :return: softmax score
+        """
+        shot = np.squeeze(shot)
+        length = shot.shape[0]
+        nr_windows = length - (self.window_size - 1) * self.window_stride
+        average = np.zeros((1, self.nr_classes))
+        for i in range(min(nr_windows, 128)):
+            window = shot[i:i + (self.window_size - 1) * self.window_stride + 1:self.window_stride]
+            window = np.expand_dims(window, 0)
+            result = self.base_model.predict(window, batch_size=1)
+            average = average + (result - average) / (i + 1)
+        return average
+
     def predict(self, shot, movie_id:str = None, shot_id: str = None, csv_file:str = None):
         """
         Classifies arbitrarily long shot using a sliding window approach. The final score is the average over all window scores
