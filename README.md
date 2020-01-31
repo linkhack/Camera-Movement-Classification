@@ -179,9 +179,9 @@ There are two scripts that help with generating the flist files.
 - `--folder_path` is the path in which the video files are contained. 
 - `--annotation` is the annotation csv file in which the annotation for the specified folder is stored.
 -' `--output` is the output file in which the flist should be stored
-Unfortunately one has to copy the annotation of the imc and efilms shots manually into one file.
+Unfortunately one has to copy the annotation of the imc and efilms shots manually into one file and one has to manually define the `categories` dictionary inside the scripts. These define the encoding of the class labels and should be consecutive integers starting from 0.
 
-`create_flist_and_training_split_from_shots.py --folder_path path/to/folders --output annotation.flist` This script is used to generate flist directly from folders containing the shots. It also automatically generates a 60%-20%-20% train/val/test split of the dataset. This script assumes following folder structure:
+`create_flist_and_training_split_from_shots.py --folder_path path/to/folders --output_folder annotations` This script is used to generate flist directly from folders containing the shots. It also automatically generates a 60%-20%-20% train/val/test split of the dataset. This script assumes following folder structure:
 - path/to/folders
    - class 1
       - file1
@@ -192,6 +192,7 @@ Unfortunately one has to copy the annotation of the imc and efilms shots manuall
       - file2
       - ...
  - ...
+ The scripts create 3 flist files inside the output folder. They are called `train_shots.flist`, `val_shots.flist` and `train_shots.flist`.
 #### Dataset correction
 - `cut_exact_videos.py --folder_path data_folder --annotation annotation.csv --output training_folder`
 - `clean_data.py --folder_path training_folder --annotation corrections.flist --output training_folder`
