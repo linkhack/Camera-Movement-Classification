@@ -230,4 +230,4 @@ tensorboard --logdir model_logs_basepath
 ```
 which is then served on `localhost:6006`.
 ### Evaluation
-The performance of a model can be checked with the script `test_inference.py`. One can define the test set, the model and the mode in the config file under `inference:`. The setting `inference_model` sets if a `CameraClassificationModel` or a `InferenceModel` is used, where a value of `True` forces the model to be a `InferenceModel`. The difference is that the `CameraClassificationModel` classifies a random subshot and `InferenceModel` classifies the whole shot. 
+The performance of a model can be checked with the script `test_inference.py`. One can define the test set, the model and the mode in the config file under `inference:`. The setting `inference_model` sets if a `CameraClassificationModel` or a `InferenceModel` is used, where a value of `True` forces the model to be a `InferenceModel`. The difference is that the `CameraClassificationModel` classifies a random subshot and `InferenceModel` classifies the whole shot. The model weights have to be defined in `load_weights:` under `model:`.
