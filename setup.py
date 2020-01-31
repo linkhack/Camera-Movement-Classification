@@ -18,5 +18,13 @@ setuptools.setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
+    install_requires = [
+        'tensorflow==2.0',
+        'keras',
+        'pyyaml',
+        'scikit-image',
+        'opencv-python',
+    ],
     python_requires='>=3.6',
+
 )

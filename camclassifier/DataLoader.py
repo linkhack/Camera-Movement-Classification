@@ -2,7 +2,7 @@ import tensorflow as tf
 from skimage import exposure, util
 
 import random
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 import numpy as np
 import cv2
 import keras.applications.resnet50 as resnet50
@@ -24,7 +24,7 @@ class DataLoader:
                       'DenseNet': densenet.preprocess_input,
                       '':lambda x: imagenet_utils.preprocess_input(x, mode='tf')}
 
-    def __init__(self, dataset_path: str = None, frame_size: Tuple[int, int]=(224,224), frame_number: int = 16, stride:int = 1, preprocess_name:str='VGG16', nr_classes:int = 2, nr_threads:int = 2):
+    def __init__(self, dataset_path: Optional[str] = None, frame_size: Tuple[int, int]=(224,224), frame_number: int = 16, stride:int = 1, preprocess_name:str='VGG16', nr_classes:int = 2, nr_threads:int = 2):
         """
         Used to create a Dataset. Iterators/Pipelines can be created with the different pipeline/iterator function.
         This class handles the loading of shots from video files. The complete preprocessing is handled by this class.

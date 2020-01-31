@@ -21,7 +21,8 @@ class InferenceModel:
         self.nr_classes = nr_classes
         self.class_dict = class_dict
         # reverse so we have encoding: name
-        self.class_dict = {v: k for k,v in self.class_dict.items()}
+        if self.class_dict is not None:
+            self.class_dict = {v: k for k,v in self.class_dict.items()}
 
     def evaluate(self, shot):
         """
@@ -57,7 +58,8 @@ class InferenceModel:
             result = self.base_model.predict(window, batch_size=1)
             average=average+(result-average)/(i+1)
         label = np.argmax(average[0])
-        label = self.class_dict.get(label,'label not found')
+        if self.class_dict is not None:
+            label = self.class_dict.get(label,'label not found')
         result = np.array((movie_id,shot_id, label))
         if csv_file is not None:
             with open(csv_file, 'a+', newline='') as file:
