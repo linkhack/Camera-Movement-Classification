@@ -85,7 +85,7 @@ if not os.path.exists(model_dir):
 
 # early stopping and epochs
 max_epochs = training_config.get('max_epochs', 100)
-steps_per_epoch = training_config.get('max_epochs', None)
+steps_per_epoch = training_config.get('steps_per_epoch', None)
 patience = training_config.get('early_stopping_patience', 15)
 
 callbacks = [
@@ -117,7 +117,7 @@ history = model.fit(trainings_pipeline, epochs=max_epochs, steps_per_epoch=steps
 # Test on test set
 nr_classes = model_config.get('nr_classes', 2)
 cm = np.zeros((nr_classes, nr_classes))
-for x, y, filename in test_pipeline:
+for x, y in test_pipeline:
     y_predict = model.predict(x, batch_size=batch_size)
     y_predict = np.argmax(y_predict[0])
     y_true = np.argmax(y[0])
