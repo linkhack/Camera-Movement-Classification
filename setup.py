@@ -19,7 +19,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires = [
-        'tensorflow-gpu==2.0.1',
+        'tensorflow-gpu==2.7.2',
         'keras',
         'pyyaml',
         'scikit-image',
